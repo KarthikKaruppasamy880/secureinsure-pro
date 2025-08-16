@@ -1,0 +1,19 @@
+{
+  "name": "mock-auth-server",
+  "version": "1.0.0",
+  "description": "Mock authentication server for SecureInsure Pro",
+  "main": "mock-auth-server.js",
+  "scripts": {
+    "start": "node mock-auth-server.js",
+    "dev": "nodemon mock-auth-server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

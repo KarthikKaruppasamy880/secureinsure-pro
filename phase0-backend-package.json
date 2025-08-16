@@ -1,0 +1,20 @@
+{
+  "name": "phase0-test-backend",
+  "version": "1.0.0",
+  "description": "PHASE 0 Test Backend for SecureInsure Pro",
+  "main": "phase0-test-backend.js",
+  "scripts": {
+    "start": "node phase0-test-backend.js",
+    "dev": "nodemon phase0-test-backend.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["insurance", "health-check", "phase0"],
+  "author": "SecureInsure Pro",
+  "license": "MIT"
+}

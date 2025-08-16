@@ -1,0 +1,141 @@
+{
+  "Case Setup": [
+    "Language of the Application",
+    "Policy Number",
+    "Application State of Signing",
+    "Application Signing Date",
+    "Date Received",
+    "Product Type",
+    "Plan Name",
+    "Amount of coverage applied for",
+    "Restricted View",
+    "Zinnia Case ID",
+    "Priority",
+    "Submission",
+    "Death Benefit",
+    "Life Insurance Qualification Test",
+    "Rate Class Applied For",
+    "Insurance Age Basis",
+    "Insurance Age Effective Date",
+    "Group"
+  ],
+  "Insured": {
+    "Personal Information": [
+      "Insured Type",
+      "Name",
+      "Date of Birth",
+      "Age",
+      "Country if born outside the U.S.",
+      "U.S. State of Birth",
+      "Gender",
+      "SSN"
+    ],
+    "Driving Information": [
+      "Driver's License Number",
+      "Issuing State",
+      "U.S. Passport Number",
+      "State Issued ID Number",
+      "State"
+    ],
+    "Address Information": [
+      "Street Address 1",
+      "Street Address 2",
+      "Country",
+      "State",
+      "City",
+      "Zip"
+    ],
+    "Employment Information": [
+      "Are you currently employed, a full-time student, or a domestic partner?",
+      "Occupation",
+      "Annual Household Income",
+      "Personal Annual Income"
+    ],
+    "Contact Information": [
+      "Mobile Phone",
+      "Email Address"
+    ]
+  },
+  "Benefits and Riders": [
+    "Accidental Death Benefit",
+    "Accidental Death Benefit Amount",
+    "Waiver of Premium",
+    "Guaranteed Insurability",
+    "Terminal Illness Benefit",
+    "Terminal Illness Benefit Amount"
+  ],
+  "Beneficiary": [
+    "Primary Beneficiary Name",
+    "Primary Beneficiary Relationship",
+    "Primary Beneficiary Percentage",
+    "Primary Beneficiary Date of Birth",
+    "Primary Beneficiary SSN",
+    "Secondary Beneficiary Name",
+    "Secondary Beneficiary Relationship",
+    "Secondary Beneficiary Percentage"
+  ],
+  "Owner": [
+    "Owner Name",
+    "Owner Relationship to Insured",
+    "Owner Date of Birth",
+    "Owner SSN",
+    "Owner Address",
+    "Owner City",
+    "Owner State",
+    "Owner ZIP"
+  ],
+  "Payor": [
+    "Payor Name",
+    "Payor Relationship to Insured",
+    "Payor Date of Birth",
+    "Payor SSN",
+    "Payment Method",
+    "Bank Account Number",
+    "Bank Routing Number"
+  ],
+  "Secondary Address": [
+    "Secondary Address Type",
+    "Secondary Street Address 1",
+    "Secondary Street Address 2",
+    "Secondary City",
+    "Secondary State",
+    "Secondary ZIP",
+    "Secondary Address Purpose"
+  ],
+  "Life Insurance History": [
+    "Previous Life Insurance Company",
+    "Previous Policy Number",
+    "Previous Coverage Amount",
+    "Previous Policy Type",
+    "Previous Policy Status",
+    "Previous Policy Term",
+    "Reason for Change"
+  ],
+  "Non Medical Information": [
+    "Hobbies and Activities",
+    "Travel Frequency",
+    "Travel Destinations",
+    "Aviation Activities",
+    "Military Service",
+    "Military Branch",
+    "Military Service Dates"
+  ],
+  "Medical Information": [
+    "Height",
+    "Weight",
+    "Blood Type",
+    "Current Medications",
+    "Medical Conditions",
+    "Family Medical History",
+    "Last Physical Exam",
+    "Physician Name"
+  ],
+  "Premium Mode": [
+    "Premium Payment Frequency",
+    "Premium Amount",
+    "Premium Start Date",
+    "Premium Due Date",
+    "Grace Period",
+    "Automatic Payment"
+  ]
+}

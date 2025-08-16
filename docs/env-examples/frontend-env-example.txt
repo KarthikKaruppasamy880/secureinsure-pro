@@ -1,0 +1,131 @@
+# SecureInsure Pro Frontend Environment Configuration
+# Copy this file to .env.local for development or .env.production for production
+# DO NOT commit actual values to version control
+
+# =============================================================================
+# API Configuration
+# =============================================================================
+# Base URL for the API Gateway
+REACT_APP_API_BASE_URL=http://localhost:8080
+# WebSocket URL for real-time notifications
+REACT_APP_WS_URL=ws://localhost:8084
+# API version
+REACT_APP_API_VERSION=v1
+
+# =============================================================================
+# Authentication & Security
+# =============================================================================
+# JWT token expiration time (in minutes)
+REACT_APP_JWT_EXPIRY=60
+# Refresh token expiration time (in days)
+REACT_APP_REFRESH_TOKEN_EXPIRY=7
+# Enable/disable biometric authentication
+REACT_APP_BIOMETRIC_AUTH_ENABLED=true
+
+# =============================================================================
+# Voice & Chatbot Services
+# =============================================================================
+# Voice provider (azure, google, aws)
+REACT_APP_VOICE_PROVIDER=azure
+# Azure Speech Service key
+REACT_APP_AZURE_SPEECH_KEY=your_azure_speech_key_here
+# Azure Speech Service region
+REACT_APP_AZURE_SPEECH_REGION=westus2
+# Google Cloud Speech API key
+REACT_APP_GOOGLE_SPEECH_API_KEY=your_google_speech_api_key_here
+# AWS Polly access key
+REACT_APP_AWS_POLLY_ACCESS_KEY=your_aws_polly_access_key_here
+# AWS Polly secret key
+REACT_APP_AWS_POLLY_SECRET_KEY=your_aws_polly_secret_key_here
+# AWS Polly region
+REACT_APP_AWS_POLLY_REGION=us-east-1
+
+# =============================================================================
+# Notification Services
+# =============================================================================
+# Email notification API endpoint
+REACT_APP_NOTIFY_EMAIL_API=https://api.sendgrid.com/v3/mail/send
+# SMS notification API endpoint
+REACT_APP_NOTIFY_SMS_API=https://api.twilio.com/2010-04-01/Accounts
+# SendGrid API key
+REACT_APP_SENDGRID_API_KEY=your_sendgrid_api_key_here
+# Twilio Account SID
+REACT_APP_TWILIO_ACCOUNT_SID=your_twilio_account_sid_here
+# Twilio Auth Token
+REACT_APP_TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
+# Twilio phone number
+REACT_APP_TWILIO_PHONE_NUMBER=+1234567890
+
+# =============================================================================
+# Face Detection & Biometrics
+# =============================================================================
+# Face detection API endpoint
+REACT_APP_FACE_DETECTION_API=https://api.face-api.com/detect
+# Face API subscription key
+REACT_APP_FACE_API_SUBSCRIPTION_KEY=your_face_api_subscription_key_here
+# Enable/disable face detection
+REACT_APP_FACE_DETECTION_ENABLED=true
+
+# =============================================================================
+# External Services
+# =============================================================================
+# Google Maps API key
+REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+# Stripe publishable key
+REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key_here
+# Analytics tracking ID
+REACT_APP_ANALYTICS_ID=your_analytics_id_here
+
+# =============================================================================
+# Development & Debug
+# =============================================================================
+# Enable/disable debug logging
+REACT_APP_DEBUG_ENABLED=false
+# Log level (error, warn, info, debug)
+REACT_APP_LOG_LEVEL=info
+# Enable/disable performance monitoring
+REACT_APP_PERFORMANCE_MONITORING=true
+# Enable/disable error reporting
+REACT_APP_ERROR_REPORTING=true
+
+# =============================================================================
+# Feature Flags
+# =============================================================================
+# Enable/disable voice commands
+REACT_APP_VOICE_COMMANDS_ENABLED=true
+# Enable/disable chatbot
+REACT_APP_CHATBOT_ENABLED=true
+# Enable/disable face detection
+REACT_APP_FACE_DETECTION_ENABLED=true
+# Enable/disable notifications
+REACT_APP_NOTIFICATIONS_ENABLED=true
+# Enable/disable real-time updates
+REACT_APP_REALTIME_UPDATES_ENABLED=true
+
+# =============================================================================
+# Performance & Caching
+# =============================================================================
+# Cache TTL for API responses (in seconds)
+REACT_APP_CACHE_TTL=300
+# Enable/disable service worker
+REACT_APP_SERVICE_WORKER_ENABLED=true
+# Enable/disable offline mode
+REACT_APP_OFFLINE_MODE_ENABLED=true
+
+# =============================================================================
+# Monitoring & Observability
+# =============================================================================
+# Sentry DSN for error tracking
+REACT_APP_SENTRY_DSN=your_sentry_dsn_here
+# LogRocket app ID
+REACT_APP_LOGROCKET_APP_ID=your_logrocket_app_id_here
+# New Relic license key
+REACT_APP_NEW_RELIC_LICENSE_KEY=your_new_relic_license_key_here
+
+# =============================================================================
+# Environment-specific overrides
+# =============================================================================
+# Override API URL for specific environments
+# REACT_APP_API_BASE_URL_DEV=http://localhost:8080
+# REACT_APP_API_BASE_URL_STAGING=https://staging-api.secureinsure.com
+# REACT_APP_API_BASE_URL_PROD=https://api.secureinsure.com 

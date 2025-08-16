@@ -1,0 +1,138 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: policy-service
+  
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:secureinsure_policy}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+
+  # Flyway Migration
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  # Redis Configuration
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+  # Mail Configuration
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,policies
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging
+logging:
+  level:
+    com.secureinsure.policy: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-super-secret-jwt-key-for-policy-service}
+  expiration: ${JWT_EXPIRATION:3600}
+
+# Policy Service Configuration
+policy:
+  # Premium calculation settings
+  premium:
+    base-rate: 0.05
+
+# ExamOne Integration Configuration
+examone:
+  api:
+    base-url: ${EXAMONE_API_BASE_URL:https://api.examone.com}
+    username: ${EXAMONE_API_USERNAME:}
+    password: ${EXAMONE_API_PASSWORD:}
+    api-key: ${EXAMONE_API_KEY:}
+    timeout: 30000
+    risk-multiplier: 1.2
+    discount-rate: 0.1
+  
+  # Document generation settings
+  documents:
+    template-path: /templates/policies/
+    output-path: /generated/policies/
+    max-file-size: 10485760 # 10MB
+  
+  # Notification settings
+  notifications:
+    email-enabled: true
+    sms-enabled: false
+    webhook-enabled: true
+  
+  # Cache settings
+  cache:
+    policy-details: 3600 # 1 hour
+    premium-calculations: 1800 # 30 minutes
+    policy-templates: 86400 # 24 hours
+
+# OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha 

@@ -1,0 +1,994 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2024-01-15T10:00:00.000Z",
+  "fields": [
+    {
+      "section": "Case Setup",
+      "fieldName": "Language of the Application",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the language for the application",
+      "validation": "required",
+      "order": 0
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Policy Number",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the policy number",
+      "validation": "required",
+      "order": 1
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Application State of Signing",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the state where the application was signed",
+      "validation": "required",
+      "order": 2
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Application Signing Date",
+      "fieldType": "date",
+      "required": true,
+      "helpText": "Enter the date when the application was signed",
+      "validation": "required",
+      "order": 3
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Date Received",
+      "fieldType": "date",
+      "required": true,
+      "helpText": "Enter the date when the application was received",
+      "validation": "required",
+      "order": 4
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Product Type",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the product type",
+      "validation": "required",
+      "order": 5
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Plan Name",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the plan name",
+      "validation": "required",
+      "order": 6
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Amount of coverage applied for",
+      "fieldType": "currency",
+      "required": true,
+      "helpText": "Enter the amount of coverage applied for",
+      "validation": "required",
+      "order": 7
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Restricted View",
+      "fieldType": "checkbox",
+      "required": false,
+      "helpText": "Check if this is a restricted view",
+      "validation": "",
+      "order": 8
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Zinnia Case ID",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the Zinnia case ID",
+      "validation": "required",
+      "order": 9
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Priority",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the priority level",
+      "validation": "required",
+      "order": 10
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Submission",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the submission status",
+      "validation": "required",
+      "order": 11
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Death Benefit",
+      "fieldType": "currency",
+      "required": true,
+      "helpText": "Enter the death benefit amount",
+      "validation": "required",
+      "order": 12
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Life Insurance Qualification Test",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the qualification test type",
+      "validation": "required",
+      "order": 13
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Rate Class Applied For",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the rate class",
+      "validation": "required",
+      "order": 14
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Insurance Age Basis",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the age basis for insurance",
+      "validation": "required",
+      "order": 15
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Insurance Age Effective Date",
+      "fieldType": "date",
+      "required": true,
+      "helpText": "Enter the effective date for insurance age",
+      "validation": "required",
+      "order": 16
+    },
+    {
+      "section": "Case Setup",
+      "fieldName": "Group",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the group information if applicable",
+      "validation": "",
+      "order": 17
+    },
+    {
+      "section": "Insured",
+      "subsection": "Personal Information",
+      "fieldName": "Insured Type",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the type of insured",
+      "validation": "required",
+      "order": 18
+    },
+    {
+      "section": "Insured",
+      "subsection": "Personal Information",
+      "fieldName": "Name",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the full name of the insured",
+      "validation": "required",
+      "order": 19
+    },
+    {
+      "section": "Insured",
+      "subsection": "Personal Information",
+      "fieldName": "Date of Birth",
+      "fieldType": "date",
+      "required": true,
+      "helpText": "Enter the date of birth",
+      "validation": "required",
+      "order": 20
+    },
+    {
+      "section": "Insured",
+      "subsection": "Personal Information",
+      "fieldName": "Age",
+      "fieldType": "number",
+      "required": true,
+      "helpText": "Age will be calculated automatically",
+      "validation": "required",
+      "order": 21
+    },
+    {
+      "section": "Insured",
+      "subsection": "Personal Information",
+      "fieldName": "Country if born outside the U.S.",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter country if born outside the U.S.",
+      "validation": "",
+      "order": 22
+    },
+    {
+      "section": "Insured",
+      "subsection": "Personal Information",
+      "fieldName": "U.S. State of Birth",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select the U.S. state of birth",
+      "validation": "",
+      "order": 23
+    },
+    {
+      "section": "Insured",
+      "subsection": "Personal Information",
+      "fieldName": "Gender",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the gender",
+      "validation": "required",
+      "order": 24
+    },
+    {
+      "section": "Insured",
+      "subsection": "Personal Information",
+      "fieldName": "SSN",
+      "fieldType": "ssn",
+      "required": true,
+      "helpText": "Enter the Social Security Number",
+      "validation": "required",
+      "order": 25
+    },
+    {
+      "section": "Insured",
+      "subsection": "Driving Information",
+      "fieldName": "Driver's License Number",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the driver's license number",
+      "validation": "",
+      "order": 26
+    },
+    {
+      "section": "Insured",
+      "subsection": "Driving Information",
+      "fieldName": "Issuing State",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select the state that issued the license",
+      "validation": "",
+      "order": 27
+    },
+    {
+      "section": "Insured",
+      "subsection": "Driving Information",
+      "fieldName": "U.S. Passport Number",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the U.S. passport number if available",
+      "validation": "",
+      "order": 28
+    },
+    {
+      "section": "Insured",
+      "subsection": "Driving Information",
+      "fieldName": "State Issued ID Number",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the state-issued ID number if available",
+      "validation": "",
+      "order": 29
+    },
+    {
+      "section": "Insured",
+      "subsection": "Driving Information",
+      "fieldName": "State",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select the state that issued the ID",
+      "validation": "",
+      "order": 30
+    },
+    {
+      "section": "Insured",
+      "subsection": "Address Information",
+      "fieldName": "Street Address 1",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the primary street address",
+      "validation": "required",
+      "order": 31
+    },
+    {
+      "section": "Insured",
+      "subsection": "Address Information",
+      "fieldName": "Street Address 2",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the secondary address line if applicable",
+      "validation": "",
+      "order": 32
+    },
+    {
+      "section": "Insured",
+      "subsection": "Address Information",
+      "fieldName": "Country",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the country",
+      "validation": "required",
+      "order": 33
+    },
+    {
+      "section": "Insured",
+      "subsection": "Address Information",
+      "fieldName": "State",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the state or province",
+      "validation": "required",
+      "order": 34
+    },
+    {
+      "section": "Insured",
+      "subsection": "Address Information",
+      "fieldName": "City",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the city",
+      "validation": "required",
+      "order": 35
+    },
+    {
+      "section": "Insured",
+      "subsection": "Address Information",
+      "fieldName": "Zip",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the ZIP or postal code",
+      "validation": "required",
+      "order": 36
+    },
+    {
+      "section": "Insured",
+      "subsection": "Employment Information",
+      "fieldName": "Are you currently employed, a full-time student, or a domestic partner?",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select your current employment status",
+      "validation": "required",
+      "order": 37
+    },
+    {
+      "section": "Insured",
+      "subsection": "Employment Information",
+      "fieldName": "Occupation",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter your current occupation",
+      "validation": "required",
+      "order": 38
+    },
+    {
+      "section": "Insured",
+      "subsection": "Employment Information",
+      "fieldName": "Annual Household Income",
+      "fieldType": "currency",
+      "required": true,
+      "helpText": "Enter your annual household income",
+      "validation": "required",
+      "order": 39
+    },
+    {
+      "section": "Insured",
+      "subsection": "Employment Information",
+      "fieldName": "Personal Annual Income",
+      "fieldType": "currency",
+      "required": true,
+      "helpText": "Enter your personal annual income",
+      "validation": "required",
+      "order": 40
+    },
+    {
+      "section": "Insured",
+      "subsection": "Contact Information",
+      "fieldName": "Mobile Phone",
+      "fieldType": "phone",
+      "required": true,
+      "helpText": "Enter your mobile phone number",
+      "validation": "required",
+      "order": 41
+    },
+    {
+      "section": "Insured",
+      "subsection": "Contact Information",
+      "fieldName": "Email Address",
+      "fieldType": "email",
+      "required": true,
+      "helpText": "Enter your email address",
+      "validation": "required",
+      "order": 42
+    },
+    {
+      "section": "Benefits and Riders",
+      "fieldName": "Accidental Death Benefit",
+      "fieldType": "checkbox",
+      "required": false,
+      "helpText": "Check if accidental death benefit is included",
+      "validation": "",
+      "order": 43
+    },
+    {
+      "section": "Benefits and Riders",
+      "fieldName": "Accidental Death Benefit Amount",
+      "fieldType": "currency",
+      "required": false,
+      "helpText": "Enter the accidental death benefit amount",
+      "validation": "",
+      "order": 44
+    },
+    {
+      "section": "Benefits and Riders",
+      "fieldName": "Waiver of Premium",
+      "fieldType": "checkbox",
+      "required": false,
+      "helpText": "Check if waiver of premium is included",
+      "validation": "",
+      "order": 45
+    },
+    {
+      "section": "Benefits and Riders",
+      "fieldName": "Guaranteed Insurability",
+      "fieldType": "checkbox",
+      "required": false,
+      "helpText": "Check if guaranteed insurability is included",
+      "validation": "",
+      "order": 46
+    },
+    {
+      "section": "Benefits and Riders",
+      "fieldName": "Terminal Illness Benefit",
+      "fieldType": "checkbox",
+      "required": false,
+      "helpText": "Check if terminal illness benefit is included",
+      "validation": "",
+      "order": 47
+    },
+    {
+      "section": "Benefits and Riders",
+      "fieldName": "Terminal Illness Benefit Amount",
+      "fieldType": "currency",
+      "required": false,
+      "helpText": "Enter the terminal illness benefit amount",
+      "validation": "",
+      "order": 48
+    },
+    {
+      "section": "Beneficiary",
+      "fieldName": "Primary Beneficiary Name",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the primary beneficiary's full name",
+      "validation": "required",
+      "order": 49
+    },
+    {
+      "section": "Beneficiary",
+      "fieldName": "Primary Beneficiary Relationship",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the relationship to the insured",
+      "validation": "required",
+      "order": 50
+    },
+    {
+      "section": "Beneficiary",
+      "fieldName": "Primary Beneficiary Percentage",
+      "fieldType": "number",
+      "required": true,
+      "helpText": "Enter the percentage allocation (must total 100%)",
+      "validation": "required",
+      "order": 51
+    },
+    {
+      "section": "Beneficiary",
+      "fieldName": "Primary Beneficiary Date of Birth",
+      "fieldType": "date",
+      "required": true,
+      "helpText": "Enter the primary beneficiary's date of birth",
+      "validation": "required",
+      "order": 52
+    },
+    {
+      "section": "Beneficiary",
+      "fieldName": "Primary Beneficiary SSN",
+      "fieldType": "ssn",
+      "required": true,
+      "helpText": "Enter the primary beneficiary's SSN",
+      "validation": "required",
+      "order": 53
+    },
+    {
+      "section": "Beneficiary",
+      "fieldName": "Secondary Beneficiary Name",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the secondary beneficiary's full name",
+      "validation": "",
+      "order": 54
+    },
+    {
+      "section": "Beneficiary",
+      "fieldName": "Secondary Beneficiary Relationship",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select the relationship to the insured",
+      "validation": "",
+      "order": 55
+    },
+    {
+      "section": "Beneficiary",
+      "fieldName": "Secondary Beneficiary Percentage",
+      "fieldType": "number",
+      "required": false,
+      "helpText": "Enter the percentage allocation",
+      "validation": "",
+      "order": 56
+    },
+    {
+      "section": "Owner",
+      "fieldName": "Owner Name",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the policy owner's full name",
+      "validation": "required",
+      "order": 57
+    },
+    {
+      "section": "Owner",
+      "fieldName": "Owner Relationship to Insured",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the owner's relationship to the insured",
+      "validation": "required",
+      "order": 58
+    },
+    {
+      "section": "Owner",
+      "fieldName": "Owner Date of Birth",
+      "fieldType": "date",
+      "required": true,
+      "helpText": "Enter the owner's date of birth",
+      "validation": "required",
+      "order": 59
+    },
+    {
+      "section": "Owner",
+      "fieldName": "Owner SSN",
+      "fieldType": "ssn",
+      "required": true,
+      "helpText": "Enter the owner's SSN",
+      "validation": "required",
+      "order": 60
+    },
+    {
+      "section": "Owner",
+      "fieldName": "Owner Address",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the owner's address",
+      "validation": "required",
+      "order": 61
+    },
+    {
+      "section": "Owner",
+      "fieldName": "Owner City",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the owner's city",
+      "validation": "required",
+      "order": 62
+    },
+    {
+      "section": "Owner",
+      "fieldName": "Owner State",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the owner's state",
+      "validation": "required",
+      "order": 63
+    },
+    {
+      "section": "Owner",
+      "fieldName": "Owner ZIP",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter the owner's ZIP code",
+      "validation": "required",
+      "order": 64
+    },
+    {
+      "section": "Payor",
+      "fieldName": "Payor Name",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the payor's full name if different from owner",
+      "validation": "",
+      "order": 65
+    },
+    {
+      "section": "Payor",
+      "fieldName": "Payor Relationship to Insured",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select the payor's relationship to the insured",
+      "validation": "",
+      "order": 66
+    },
+    {
+      "section": "Payor",
+      "fieldName": "Payor Date of Birth",
+      "fieldType": "date",
+      "required": false,
+      "helpText": "Enter the payor's date of birth",
+      "validation": "",
+      "order": 67
+    },
+    {
+      "section": "Payor",
+      "fieldName": "Payor SSN",
+      "fieldType": "ssn",
+      "required": false,
+      "helpText": "Enter the payor's SSN",
+      "validation": "",
+      "order": 68
+    },
+    {
+      "section": "Payor",
+      "fieldName": "Payment Method",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the payment method",
+      "validation": "required",
+      "order": 69
+    },
+    {
+      "section": "Payor",
+      "fieldName": "Bank Account Number",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the bank account number for automatic payments",
+      "validation": "",
+      "order": 70
+    },
+    {
+      "section": "Payor",
+      "fieldName": "Bank Routing Number",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the bank routing number",
+      "validation": "",
+      "order": 71
+    },
+    {
+      "section": "Secondary Address",
+      "fieldName": "Secondary Address Type",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select the type of secondary address",
+      "validation": "",
+      "order": 72
+    },
+    {
+      "section": "Secondary Address",
+      "fieldName": "Secondary Street Address 1",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the secondary street address",
+      "validation": "",
+      "order": 73
+    },
+    {
+      "section": "Secondary Address",
+      "fieldName": "Secondary Street Address 2",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the secondary address line 2 if applicable",
+      "validation": "",
+      "order": 74
+    },
+    {
+      "section": "Secondary Address",
+      "fieldName": "Secondary City",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the secondary city",
+      "validation": "",
+      "order": 75
+    },
+    {
+      "section": "Secondary Address",
+      "fieldName": "Secondary State",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select the secondary state",
+      "validation": "",
+      "order": 76
+    },
+    {
+      "section": "Secondary Address",
+      "fieldName": "Secondary ZIP",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the secondary ZIP code",
+      "validation": "",
+      "order": 77
+    },
+    {
+      "section": "Secondary Address",
+      "fieldName": "Secondary Address Purpose",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Explain the purpose of this secondary address",
+      "validation": "",
+      "order": 78
+    },
+    {
+      "section": "Life Insurance History",
+      "fieldName": "Previous Life Insurance Company",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the name of previous life insurance company",
+      "validation": "",
+      "order": 79
+    },
+    {
+      "section": "Life Insurance History",
+      "fieldName": "Previous Policy Number",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the previous policy number",
+      "validation": "",
+      "order": 80
+    },
+    {
+      "section": "Life Insurance History",
+      "fieldName": "Previous Coverage Amount",
+      "fieldType": "currency",
+      "required": false,
+      "helpText": "Enter the previous coverage amount",
+      "validation": "",
+      "order": 81
+    },
+    {
+      "section": "Life Insurance History",
+      "fieldName": "Previous Policy Type",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select the previous policy type",
+      "validation": "",
+      "order": 82
+    },
+    {
+      "section": "Life Insurance History",
+      "fieldName": "Previous Policy Status",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select the status of the previous policy",
+      "validation": "",
+      "order": 83
+    },
+    {
+      "section": "Life Insurance History",
+      "fieldName": "Previous Policy Term",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter the term of the previous policy",
+      "validation": "",
+      "order": 84
+    },
+    {
+      "section": "Life Insurance History",
+      "fieldName": "Reason for Change",
+      "fieldType": "textarea",
+      "required": false,
+      "helpText": "Explain the reason for changing insurance companies",
+      "validation": "",
+      "order": 85
+    },
+    {
+      "section": "Non Medical Information",
+      "fieldName": "Hobbies and Activities",
+      "fieldType": "textarea",
+      "required": false,
+      "helpText": "List your hobbies and recreational activities",
+      "validation": "",
+      "order": 86
+    },
+    {
+      "section": "Non Medical Information",
+      "fieldName": "Travel Frequency",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select how often you travel",
+      "validation": "",
+      "order": 87
+    },
+    {
+      "section": "Non Medical Information",
+      "fieldName": "Travel Destinations",
+      "fieldType": "textarea",
+      "required": false,
+      "helpText": "List countries or regions you travel to",
+      "validation": "",
+      "order": 88
+    },
+    {
+      "section": "Non Medical Information",
+      "fieldName": "Aviation Activities",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select if you participate in aviation activities",
+      "validation": "",
+      "order": 89
+    },
+    {
+      "section": "Non Medical Information",
+      "fieldName": "Military Service",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select if you have military service",
+      "validation": "",
+      "order": 90
+    },
+    {
+      "section": "Non Medical Information",
+      "fieldName": "Military Branch",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select your military branch if applicable",
+      "validation": "",
+      "order": 91
+    },
+    {
+      "section": "Non Medical Information",
+      "fieldName": "Military Service Dates",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter your military service dates",
+      "validation": "",
+      "order": 92
+    },
+    {
+      "section": "Medical Information",
+      "fieldName": "Height",
+      "fieldType": "text",
+      "required": true,
+      "helpText": "Enter your height in feet and inches",
+      "validation": "required",
+      "order": 93
+    },
+    {
+      "section": "Medical Information",
+      "fieldName": "Weight",
+      "fieldType": "number",
+      "required": true,
+      "helpText": "Enter your weight in pounds",
+      "validation": "required",
+      "order": 94
+    },
+    {
+      "section": "Medical Information",
+      "fieldName": "Blood Type",
+      "fieldType": "select",
+      "required": false,
+      "helpText": "Select your blood type if known",
+      "validation": "",
+      "order": 95
+    },
+    {
+      "section": "Medical Information",
+      "fieldName": "Current Medications",
+      "fieldType": "textarea",
+      "required": false,
+      "helpText": "List any current medications you are taking",
+      "validation": "",
+      "order": 96
+    },
+    {
+      "section": "Medical Information",
+      "fieldName": "Medical Conditions",
+      "fieldType": "textarea",
+      "required": false,
+      "helpText": "List any current medical conditions",
+      "validation": "",
+      "order": 97
+    },
+    {
+      "section": "Medical Information",
+      "fieldName": "Family Medical History",
+      "fieldType": "textarea",
+      "required": false,
+      "helpText": "List any relevant family medical history",
+      "validation": "",
+      "order": 98
+    },
+    {
+      "section": "Medical Information",
+      "fieldName": "Last Physical Exam",
+      "fieldType": "date",
+      "required": false,
+      "helpText": "Enter the date of your last physical examination",
+      "validation": "",
+      "order": 99
+    },
+    {
+      "section": "Medical Information",
+      "fieldName": "Physician Name",
+      "fieldType": "text",
+      "required": false,
+      "helpText": "Enter your primary physician's name",
+      "validation": "",
+      "order": 100
+    },
+    {
+      "section": "Premium Mode",
+      "fieldName": "Premium Payment Frequency",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select how often you want to pay premiums",
+      "validation": "required",
+      "order": 101
+    },
+    {
+      "section": "Premium Mode",
+      "fieldName": "Premium Amount",
+      "fieldType": "currency",
+      "required": true,
+      "helpText": "Enter the premium amount",
+      "validation": "required",
+      "order": 102
+    },
+    {
+      "section": "Premium Mode",
+      "fieldName": "Premium Start Date",
+      "fieldType": "date",
+      "required": true,
+      "helpText": "Enter when premium payments should begin",
+      "validation": "required",
+      "order": 103
+    },
+    {
+      "section": "Premium Mode",
+      "fieldName": "Premium Due Date",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the day of month for premium due date",
+      "validation": "required",
+      "order": 104
+    },
+    {
+      "section": "Premium Mode",
+      "fieldName": "Grace Period",
+      "fieldType": "select",
+      "required": true,
+      "helpText": "Select the grace period for late payments",
+      "validation": "required",
+      "order": 105
+    },
+    {
+      "section": "Premium Mode",
+      "fieldName": "Automatic Payment",
+      "fieldType": "checkbox",
+      "required": false,
+      "helpText": "Check if you want automatic premium payments",
+      "validation": "",
+      "order": 106
+    }
+  ]
+} 

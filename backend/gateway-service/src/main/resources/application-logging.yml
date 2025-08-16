@@ -1,0 +1,269 @@
+# SecureInsure Pro - Logging Configuration
+# This file configures comprehensive logging for all services
+
+logging:
+  # Global logging level
+  level:
+    root: INFO
+    com.secureinsure: DEBUG
+    org.springframework: INFO
+    org.springframework.cloud: INFO
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    org.springframework.data: INFO
+    org.hibernate: INFO
+    org.apache: INFO
+    io.netty: INFO
+    reactor: INFO
+  
+  # File logging configuration
+  file:
+    path: logs
+    max-size: 100MB
+    max-history: 30
+  
+  # Logback configuration
+  config: classpath:logback-spring.xml
+  
+  # Pattern for console output
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  
+  # Custom logging properties
+  custom:
+    # Log rotation settings
+    rotation:
+      enabled: true
+      max-file-size: 100MB
+      max-files: 10
+      compress-old-files: true
+    
+    # Log retention settings
+    retention:
+      enabled: true
+      max-days: 30
+      max-total-size: 1GB
+    
+    # Performance logging
+    performance:
+      enabled: true
+      slow-query-threshold: 1000ms
+      slow-request-threshold: 2000ms
+    
+    # Security logging
+    security:
+      enabled: true
+      log-authentication: true
+      log-authorization: true
+      log-session: true
+      mask-sensitive-data: true
+    
+    # Business logic logging
+    business:
+      enabled: true
+      log-user-actions: true
+      log-business-events: true
+      log-data-changes: true
+    
+    # Error logging
+    error:
+      enabled: true
+      log-stack-traces: true
+      log-error-context: true
+      max-stack-trace-length: 1000
+
+# Logging service specific configuration
+secureinsure:
+  logging:
+    # Service-specific log levels
+    service:
+      gateway: DEBUG
+      auth: DEBUG
+      policy: DEBUG
+      claims: DEBUG
+      notification: DEBUG
+      admin: DEBUG
+      search: DEBUG
+    
+    # Log categories
+    categories:
+      - name: "Authentication"
+        level: DEBUG
+        enabled: true
+      - name: "Authorization"
+        level: DEBUG
+        enabled: true
+      - name: "API"
+        level: DEBUG
+        enabled: true
+      - name: "Database"
+        level: DEBUG
+        enabled: true
+      - name: "Performance"
+        level: INFO
+        enabled: true
+      - name: "Security"
+        level: WARN
+        enabled: true
+      - name: "Business"
+        level: INFO
+        enabled: true
+      - name: "System"
+        level: INFO
+        enabled: true
+    
+    # Alert thresholds
+    alerts:
+      error-rate-threshold: 5.0
+      critical-error-threshold: 1
+      performance-degradation-threshold: 2000ms
+      memory-usage-threshold: 80.0
+      disk-usage-threshold: 85.0
+    
+    # Integration settings
+    integration:
+      # Send critical logs to external monitoring systems
+      external-monitoring:
+        enabled: false
+        endpoints: []
+      
+      # Log aggregation
+      aggregation:
+        enabled: true
+        batch-size: 100
+        batch-timeout: 5000ms
+      
+      # Real-time notifications
+      notifications:
+        enabled: true
+        channels:
+          - email
+          - slack
+          - webhook
+        
+        # Notification rules
+        rules:
+          - condition: "error-rate > 10%"
+            channels: ["email", "slack"]
+            cooldown: 300s
+          
+          - condition: "critical-error > 0"
+            channels: ["email", "slack", "webhook"]
+            cooldown: 60s
+          
+          - condition: "memory-usage > 90%"
+            channels: ["email", "slack"]
+            cooldown: 600s
+
+# Spring Boot specific logging
+spring:
+  application:
+    name: "SecureInsure Gateway Service"
+  
+  # Actuator endpoints for monitoring
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,metrics,loggers,env,configprops
+        base-path: /actuator
+    
+    endpoint:
+      health:
+        show-details: when-authorized
+        show-components: always
+      
+      metrics:
+        enabled: true
+      
+      loggers:
+        enabled: true
+    
+    # Health check configuration
+    health:
+      defaults:
+        enabled: true
+      
+      # Custom health indicators
+      indicators:
+        disk-space:
+          enabled: true
+          threshold: 10MB
+          path: .
+        
+        redis:
+          enabled: true
+        
+        db:
+          enabled: true
+    
+    # Metrics configuration
+    metrics:
+      export:
+        prometheus:
+          enabled: true
+        
+        influx:
+          enabled: false
+        
+        statsd:
+          enabled: false
+      
+      # Custom metrics
+      distribution:
+        percentiles-histogram:
+          http.server.requests: true
+        
+        percentiles:
+          http.server.requests: 0.5, 0.95, 0.99
+
+# Logging profiles for different environments
+---
+spring:
+  profiles: development
+  logging:
+    level:
+      root: DEBUG
+      com.secureinsure: DEBUG
+      org.springframework: DEBUG
+    
+    custom:
+      performance:
+        enabled: true
+        slow-query-threshold: 500ms
+        slow-request-threshold: 1000ms
+
+---
+spring:
+  profiles: staging
+  logging:
+    level:
+      root: INFO
+      com.secureinsure: DEBUG
+    
+    custom:
+      performance:
+        enabled: true
+        slow-query-threshold: 1000ms
+        slow-request-threshold: 2000ms
+
+---
+spring:
+  profiles: production
+  logging:
+    level:
+      root: WARN
+      com.secureinsure: INFO
+    
+    custom:
+      performance:
+        enabled: true
+        slow-query-threshold: 2000ms
+        slow-request-threshold: 5000ms
+      
+      integration:
+        external-monitoring:
+          enabled: true
+        notifications:
+          enabled: true

@@ -1,0 +1,194 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: secureinsure-postgres
+    environment:
+      POSTGRES_DB: secureinsure_pro
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - secureinsure-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: secureinsure-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - secureinsure-network
+
+  # Gateway Service
+  gateway-service:
+    build:
+      context: ./backend
+      dockerfile: gateway-service/Dockerfile
+    container_name: secureinsure-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - secureinsure-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: auth-service/Dockerfile
+    container_name: secureinsure-auth
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - secureinsure-network
+
+  # Policy Service
+  policy-service:
+    build:
+      context: ./backend
+      dockerfile: policy-service/Dockerfile
+    container_name: secureinsure-policy
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - EXAMONE_API_BASE_URL=${EXAMONE_API_BASE_URL:-https://api.examone.com}
+      - EXAMONE_API_USERNAME=${EXAMONE_API_USERNAME:-}
+      - EXAMONE_API_PASSWORD=${EXAMONE_API_PASSWORD:-}
+      - EXAMONE_API_KEY=${EXAMONE_API_KEY:-}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - secureinsure-network
+
+  # Claims Service
+  claims-service:
+    build:
+      context: ./backend
+      dockerfile: claims-service/Dockerfile
+    container_name: secureinsure-claims
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - secureinsure-network
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./backend
+      dockerfile: notification-service/Dockerfile
+    container_name: secureinsure-notification
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - secureinsure-network
+
+  # Admin Service
+  admin-service:
+    build:
+      context: ./backend
+      dockerfile: admin-service/Dockerfile
+    container_name: secureinsure-admin
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - secureinsure-network
+
+  # Search Service
+  search-service:
+    build:
+      context: ./backend
+      dockerfile: search-service/Dockerfile
+    container_name: secureinsure-search
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - secureinsure-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: secureinsure-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_BASE_URL=http://localhost:8080
+      - REACT_APP_EXAMONE_API_URL=http://localhost:8082/api/v1/examone
+    depends_on:
+      - gateway-service
+    networks:
+      - secureinsure-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: secureinsure-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - gateway-service
+      - frontend
+    networks:
+      - secureinsure-network
+
+volumes:
+  postgres_data:
+
+networks:
+  secureinsure-network:
+    driver: bridge 

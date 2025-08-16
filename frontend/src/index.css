@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  /* Premium Button Styles */
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-500/30 focus:ring-offset-2 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+  }
+  
+  .btn-secondary {
+    @apply bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-xl focus:outline-none focus:ring-4 focus:ring-gray-500/30 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg border border-gray-200;
+  }
+  
+  .btn-success {
+    @apply bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/30 focus:ring-offset-2 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+  }
+  
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-500/30 focus:ring-offset-2 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5;
+  }
+  
+  /* Premium Input Styles */
+  .input-field {
+    @apply block w-full px-4 py-3 border-2 border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm;
+  }
+  
+  /* Premium Card Styles */
+  .card {
+    @apply bg-white/90 backdrop-blur-sm shadow-xl rounded-2xl border border-white/20;
+  }
+  
+  .card-premium {
+    @apply bg-gradient-to-br from-white/95 to-white/80 backdrop-blur-md shadow-2xl rounded-2xl border border-white/30 hover:shadow-2xl transition-all duration-500;
+  }
+  
+  .card-header-premium {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-2xl px-6 py-4;
+  }
+  
+  /* Premium Navigation */
+  .nav-premium {
+    @apply bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20;
+  }
+  
+  /* Premium Dashboard Stats */
+  .stat-card {
+    @apply bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1;
+  }
+  
+  .stat-card-success {
+    @apply bg-gradient-to-br from-green-500 to-emerald-600;
+  }
+  
+  .stat-card-warning {
+    @apply bg-gradient-to-br from-yellow-500 to-orange-600;
+  }
+  
+  .stat-card-danger {
+    @apply bg-gradient-to-br from-red-500 to-pink-600;
+  }
+  
+  /* Premium Form Elements */
+  .form-section {
+    @apply bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/30;
+  }
+  
+  .form-section-header {
+    @apply bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-2xl px-6 py-4 border-b border-gray-200;
+  }
+  
+  /* Premium Table Styles */
+  .table-premium {
+    @apply bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden;
+  }
+  
+  .table-header-premium {
+    @apply bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200;
+  }
+  
+  /* Premium Modal Styles */
+  .modal-premium {
+    @apply bg-white/95 backdrop-blur-md rounded-3xl shadow-3xl border border-white/30;
+  }
+  
+  /* Premium Loading States */
+  .loading-premium {
+    @apply bg-gradient-to-r from-blue-200 via-purple-200 to-blue-200 bg-size-200 animate-pulse;
+  }
+  
+  /* Premium Focus States */
+  .focus-premium {
+    @apply focus:outline-none focus:ring-4 focus:ring-blue-500/30 focus:ring-offset-2;
+  }
+  
+  /* Premium Hover Effects */
+  .hover-premium {
+    @apply hover:shadow-xl hover:-translate-y-1 transition-all duration-300;
+  }
+  
+  /* Premium Text Gradients */
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-success {
+    @apply bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-warning {
+    @apply bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-danger {
+    @apply bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent;
+  }
+}
+
+/* Premium Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+  border-radius: 4px;
+  border: 2px solid #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+}
+
+/* Dark mode premium styles */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.dark .card {
+  @apply bg-gray-800/90 border-gray-700/30;
+}
+
+.dark .card-premium {
+  @apply bg-gray-800/95 border-gray-700/50;
+}
+
+.dark .input-field {
+  @apply bg-gray-800/80 border-gray-600 text-white;
+}
+
+.dark .form-section {
+  @apply bg-gray-800/80 border-gray-700/30;
+}
+
+.dark .form-section-header {
+  @apply bg-gradient-to-r from-gray-700 to-gray-800 border-gray-600;
+}
+
+.dark .table-premium {
+  @apply bg-gray-800/90 border-gray-700/30;
+}
+
+.dark .table-header-premium {
+  @apply bg-gradient-to-r from-gray-700 to-gray-800 border-gray-600;
+}
+
+.dark .modal-premium {
+  @apply bg-gray-800/95 border-gray-700/50;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+  border-color: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+}
+
+/* Premium animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+  50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Premium responsive design */
+@media (max-width: 768px) {
+  .card-premium {
+    @apply rounded-xl shadow-lg;
+  }
+  
+  .btn-primary, .btn-secondary, .btn-success, .btn-danger {
+    @apply py-2.5 px-4 text-sm;
+  }
+  
+  .input-field {
+    @apply py-2.5 px-3 text-base;
+  }
+}
+
+/* Premium focus ring utilities */
+.focus-ring-premium {
+  @apply focus:outline-none focus:ring-4 focus:ring-blue-500/30 focus:ring-offset-2;
+}
+
+.focus-ring-success {
+  @apply focus:outline-none focus:ring-4 focus:ring-green-500/30 focus:ring-offset-2;
+}
+
+.focus-ring-warning {
+  @apply focus:outline-none focus:ring-4 focus:ring-yellow-500/30 focus:ring-offset-2;
+}
+
+.focus-ring-danger {
+  @apply focus:outline-none focus:ring-4 focus:ring-red-500/30 focus:ring-offset-2;
+}

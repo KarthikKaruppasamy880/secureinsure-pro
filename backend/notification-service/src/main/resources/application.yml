@@ -1,0 +1,162 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: notification-service
+  
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:secureinsure_notifications}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
+
+  # Flyway Migration
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  # Redis Configuration
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+  # Mail Configuration
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,notifications
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging
+logging:
+  level:
+    com.secureinsure.notification: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-super-secret-jwt-key-for-notification-service}
+  expiration: ${JWT_EXPIRATION:3600}
+
+# Notification Service Configuration
+notification:
+  # Email settings
+  email:
+    enabled: true
+    from-address: ${NOTIFICATION_FROM_EMAIL:noreply@secureinsure.com}
+    reply-to: ${NOTIFICATION_REPLY_TO:support@secureinsure.com}
+    batch-size: 100
+    retry-attempts: 3
+  
+  # SMS settings
+  sms:
+    enabled: true
+    from-number: ${SMS_FROM_NUMBER:+1234567890}
+    batch-size: 50
+    retry-attempts: 3
+  
+  # Push notification settings
+  push:
+    enabled: true
+    batch-size: 200
+    retry-attempts: 3
+  
+  # Webhook settings
+  webhook:
+    enabled: true
+    timeout: 10000
+    retry-attempts: 3
+  
+  # Template settings
+  templates:
+    path: /templates/notifications/
+    cache-enabled: true
+    cache-ttl: 3600
+  
+  # Rate limiting
+  rate-limit:
+    email-per-minute: 60
+    sms-per-minute: 30
+    push-per-minute: 100
+    webhook-per-minute: 50
+
+# AWS Configuration
+aws:
+  region: ${AWS_REGION:us-east-1}
+  ses:
+    enabled: ${AWS_SES_ENABLED:false}
+    from-email: ${AWS_SES_FROM_EMAIL:}
+  sns:
+    enabled: ${AWS_SNS_ENABLED:false}
+    topic-arn: ${AWS_SNS_TOPIC_ARN:}
+
+# Twilio Configuration
+twilio:
+  enabled: ${TWILIO_ENABLED:false}
+  account-sid: ${TWILIO_ACCOUNT_SID:}
+  auth-token: ${TWILIO_AUTH_TOKEN:}
+  from-number: ${TWILIO_FROM_NUMBER:}
+
+# OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha 

@@ -1,0 +1,10 @@
+com\secureinsure\gateway\logging\LoggingService$LogEntry.class
+com\secureinsure\gateway\logging\LoggingService$LogLevel.class
+com\secureinsure\gateway\logging\LoggingService.class
+com\secureinsure\gateway\config\GatewaySecurityConfig.class
+com\secureinsure\gateway\controller\LoggingController.class
+com\secureinsure\gateway\logging\LoggingService$1.class
+com\secureinsure\gateway\logging\ServerRuntimeLogger.class
+com\secureinsure\gateway\controller\HealthController.class
+com\secureinsure\gateway\GatewayApplication.class
+com\secureinsure\gateway\controller\FallbackController.class

@@ -1,0 +1,92 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/secureinsure_auth
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+      timeout: 2000ms
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:secureinsure@gmail.com}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  cloud:
+    discovery:
+      enabled: true
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:secureinsure-pro-jwt-secret-key-2024-very-long-and-secure}
+  expiration: 86400000 # 24 hours
+  refresh-expiration: 604800000 # 7 days
+
+# AWS Configuration
+aws:
+  region: us-east-1
+  rekognition:
+    enabled: true
+  ses:
+    enabled: true
+
+# Security Configuration
+security:
+  password:
+    min-length: 8
+    require-uppercase: true
+    require-lowercase: true
+    require-numbers: true
+    require-special-chars: true
+  mfa:
+    enabled: true
+    issuer: SecureInsure Pro
+  biometric:
+    enabled: true
+    face-recognition-threshold: 0.8
+    voice-recognition-threshold: 0.7
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.secureinsure.pro.auth: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n" 

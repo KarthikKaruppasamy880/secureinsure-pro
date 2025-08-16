@@ -1,0 +1,191 @@
+# SecureInsure Pro Backend Environment Configuration
+# Copy this file to .env.local for development or .env.production for production
+# DO NOT commit actual values to version control
+
+# =============================================================================
+# Common Spring Boot Configuration
+# =============================================================================
+# Spring profiles (dev, local, docker, prod)
+SPRING_PROFILES_ACTIVE=local
+# Application name (will be overridden by each service)
+SPRING_APPLICATION_NAME=secureinsure-service
+
+# =============================================================================
+# Database Configuration
+# =============================================================================
+# PostgreSQL Configuration
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/secureinsure
+SPRING_DATASOURCE_USERNAME=secureinsure
+SPRING_DATASOURCE_PASSWORD=secureinsure123
+SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+
+# Database Connection Pool
+SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=20
+SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=5
+SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT=300000
+SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=20000
+
+# JPA/Hibernate Configuration
+SPRING_JPA_HIBERNATE_DDL_AUTO=validate
+SPRING_JPA_SHOW_SQL=false
+SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+
+# =============================================================================
+# Redis Configuration
+# =============================================================================
+# Redis Host and Port
+SPRING_REDIS_HOST=localhost
+SPRING_REDIS_PORT=6379
+SPRING_REDIS_PASSWORD=
+SPRING_REDIS_DATABASE=0
+SPRING_REDIS_TIMEOUT=2000ms
+
+# Redis Connection Pool
+SPRING_REDIS_LETTUCE_POOL_MAX_ACTIVE=8
+SPRING_REDIS_LETTUCE_POOL_MAX_IDLE=8
+SPRING_REDIS_LETTUCE_POOL_MIN_IDLE=0
+
+# =============================================================================
+# Elasticsearch Configuration
+# =============================================================================
+# Elasticsearch Host and Port
+SPRING_ELASTICSEARCH_HOST=localhost
+SPRING_ELASTICSEARCH_PORT=9200
+SPRING_ELASTICSEARCH_USERNAME=
+SPRING_ELASTICSEARCH_PASSWORD=
+SPRING_ELASTICSEARCH_URIS=http://localhost:9200
+
+# =============================================================================
+# JWT Configuration
+# =============================================================================
+# JWT Secret Key (use strong, unique key in production)
+JWT_SECRET=your_jwt_secret_key_here_make_it_long_and_secure
+# JWT Expiration (in milliseconds)
+JWT_EXPIRATION=3600000
+# JWT Refresh Expiration (in milliseconds)
+JWT_REFRESH_EXPIRATION=2592000000
+
+# =============================================================================
+# Security Configuration
+# =============================================================================
+# CORS Origins (comma-separated)
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+# Rate Limiting
+RATE_LIMIT_REQUESTS_PER_MINUTE=100
+RATE_LIMIT_BURST_CAPACITY=200
+
+# =============================================================================
+# External API Keys
+# =============================================================================
+# SendGrid API Key for Email Notifications
+SENDGRID_API_KEY=your_sendgrid_api_key_here
+# Twilio Configuration for SMS
+TWILIO_ACCOUNT_SID=your_twilio_account_sid_here
+TWILIO_AUTH_TOKEN=your_twilio_auth_token_here
+TWILIO_PHONE_NUMBER=+1234567890
+
+# Azure Speech Service
+AZURE_SPEECH_KEY=your_azure_speech_key_here
+AZURE_SPEECH_REGION=westus2
+
+# Google Cloud Speech API
+GOOGLE_CLOUD_SPEECH_API_KEY=your_google_speech_api_key_here
+
+# AWS Polly
+AWS_POLLY_ACCESS_KEY=your_aws_polly_access_key_here
+AWS_POLLY_SECRET_KEY=your_aws_polly_secret_key_here
+AWS_POLLY_REGION=us-east-1
+
+# Face API
+FACE_API_SUBSCRIPTION_KEY=your_face_api_subscription_key_here
+FACE_API_ENDPOINT=https://api.face-api.com
+
+# =============================================================================
+# Monitoring & Observability
+# =============================================================================
+# Actuator Configuration
+MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus
+MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true
+
+# Logging Configuration
+LOGGING_LEVEL_ROOT=INFO
+LOGGING_LEVEL_COM_SECUREINSURE=DEBUG
+LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=INFO
+LOGGING_LEVEL_ORG_HIBERNATE_SQL=DEBUG
+LOGGING_LEVEL_ORG_HIBERNATE_TYPE_DESCRIPTOR_SQL=TRACE
+
+# =============================================================================
+# Circuit Breaker Configuration
+# =============================================================================
+# Resilience4j Configuration
+RESILIENCE4J_CIRCUITBREAKER_INSTANCES_DEFAULT_SLIDING_WINDOW_SIZE=10
+RESILIENCE4J_CIRCUITBREAKER_INSTANCES_DEFAULT_FAILURE_RATE_THRESHOLD=50
+RESILIENCE4J_CIRCUITBREAKER_INSTANCES_DEFAULT_WAIT_DURATION_IN_OPEN_STATE=5000
+RESILIENCE4J_CIRCUITBREAKER_INSTANCES_DEFAULT_PERMITTED_NUMBER_OF_CALLS_IN_HALF_OPEN_STATE=3
+
+# =============================================================================
+# Service-Specific Configuration
+# =============================================================================
+
+# Gateway Service
+GATEWAY_SERVICE_PORT=8080
+GATEWAY_SERVICE_NAME=gateway-service
+
+# Auth Service
+AUTH_SERVICE_PORT=8081
+AUTH_SERVICE_NAME=auth-service
+AUTH_SERVICE_DATABASE=secureinsure_auth
+
+# Policy Service
+POLICY_SERVICE_PORT=8082
+POLICY_SERVICE_NAME=policy-service
+POLICY_SERVICE_DATABASE=secureinsure_policy
+
+# Claims Service
+CLAIMS_SERVICE_PORT=8083
+CLAIMS_SERVICE_NAME=claims-service
+CLAIMS_SERVICE_DATABASE=secureinsure_claims
+
+# Notification Service
+NOTIFICATION_SERVICE_PORT=8084
+NOTIFICATION_SERVICE_NAME=notification-service
+NOTIFICATION_SERVICE_DATABASE=secureinsure_notification
+
+# Admin Service
+ADMIN_SERVICE_PORT=8085
+ADMIN_SERVICE_NAME=admin-service
+ADMIN_SERVICE_DATABASE=secureinsure_admin
+
+# Search Service
+SEARCH_SERVICE_PORT=8086
+SEARCH_SERVICE_NAME=search-service
+SEARCH_SERVICE_DATABASE=secureinsure_search
+
+# =============================================================================
+# Development & Testing
+# =============================================================================
+# Enable/disable specific features
+FEATURE_VOICE_COMMANDS_ENABLED=true
+FEATURE_FACE_DETECTION_ENABLED=true
+FEATURE_CHATBOT_ENABLED=true
+FEATURE_NOTIFICATIONS_ENABLED=true
+FEATURE_AUDIT_LOGGING_ENABLED=true
+
+# Test Configuration
+TEST_DATABASE_URL=jdbc:h2:mem:testdb
+TEST_DATABASE_USERNAME=sa
+TEST_DATABASE_PASSWORD=
+
+# =============================================================================
+# Production Overrides
+# =============================================================================
+# Uncomment and set these for production
+# SPRING_PROFILES_ACTIVE=prod
+# SPRING_DATASOURCE_URL=jdbc:postgresql://prod-db:5432/secureinsure
+# SPRING_REDIS_HOST=prod-redis
+# SPRING_ELASTICSEARCH_HOST=prod-elasticsearch
+# CORS_ALLOWED_ORIGINS=https://app.secureinsure.com
+# LOGGING_LEVEL_ROOT=WARN
+# LOGGING_LEVEL_COM_SECUREINSURE=INFO 
