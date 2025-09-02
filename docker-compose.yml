@@ -45,11 +45,11 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: ./backend
-      dockerfile: auth-service/Dockerfile
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
     container_name: secureinsure-auth
     ports:
-      - "8081:8081"
+      - "8082:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - DB_HOST=postgres
@@ -151,6 +151,28 @@ services:
     depends_on:
       - postgres
       - redis
+    networks:
+      - secureinsure-network
+
+  # Chatbot Service
+  chatbot-service:
+    build:
+      context: ./backend/chatbot-service
+      dockerfile: Dockerfile
+    container_name: secureinsure-chatbot
+    ports:
+      - "8087:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+    depends_on:
+      - postgres
+      - redis
+      - policy-service
+      - claims-service
     networks:
       - secureinsure-network
 
