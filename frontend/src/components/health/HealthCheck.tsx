@@ -6,10 +6,12 @@ import { CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface HealthStatus {
-  status: 'UP' | 'DOWN' | 'CHECKING';
-  timestamp: string;
-  service: string;
-  version: string;
+  status?: 'UP' | 'DOWN' | 'CHECKING' | 'ok';
+  ready?: boolean;
+  version?: string;
+  timestamp?: string;
+  ts?: string;
+  service?: string;
   uptime?: number;
   memory?: any;
   checks?: any;
@@ -29,49 +31,52 @@ const HealthCheck: React.FC<HealthCheckProps> = ({ className }) => {
   const checkHealth = async () => {
     setIsChecking(true);
     try {
-      // Check health endpoint
-      const healthResponse = await fetch('http://localhost:8080/health');
-      if (healthResponse.ok) {
-        const healthData = await healthResponse.json();
-        setHealthStatus(healthData);
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+      
+      // Check all health endpoints
+      const [healthResponse, readyResponse, versionResponse] = await Promise.allSettled([
+        fetch(`${API_BASE_URL}/health`),
+        fetch(`${API_BASE_URL}/ready`),
+        fetch(`${API_BASE_URL}/version`)
+      ]);
+
+      // Health endpoint
+      if (healthResponse.status === 'fulfilled' && healthResponse.value.ok) {
+        const healthData = await healthResponse.value.json();
+        setHealthStatus({ ...healthData, status: 'UP' });
       } else {
-        const errorStatus: HealthStatus = { 
+        setHealthStatus({ 
           status: 'DOWN', 
           timestamp: new Date().toISOString(), 
-          service: 'gateway-service', 
+          service: 'mock-backend', 
           version: 'unknown' 
-        };
-        setHealthStatus(errorStatus);
+        });
       }
 
-      // Check ready endpoint
-      const readyResponse = await fetch('http://localhost:8080/ready');
-      if (readyResponse.ok) {
-        const readyData = await readyResponse.json();
-        setReadyStatus(readyData);
+      // Ready endpoint
+      if (readyResponse.status === 'fulfilled' && readyResponse.value.ok) {
+        const readyData = await readyResponse.value.json();
+        setReadyStatus({ ...readyData, status: readyData.ready ? 'UP' : 'DOWN' });
       } else {
-        const errorStatus: HealthStatus = { 
+        setReadyStatus({ 
           status: 'DOWN', 
           timestamp: new Date().toISOString(), 
-          service: 'gateway-service', 
+          service: 'mock-backend', 
           version: 'unknown' 
-        };
-        setReadyStatus(errorStatus);
+        });
       }
 
-      // Check version endpoint
-      const versionResponse = await fetch('http://localhost:8080/version');
-      if (versionResponse.ok) {
-        const versionData = await versionResponse.json();
-        setVersionStatus(versionData);
+      // Version endpoint
+      if (versionResponse.status === 'fulfilled' && versionResponse.value.ok) {
+        const versionData = await versionResponse.value.json();
+        setVersionStatus({ ...versionData, status: 'UP' });
       } else {
-        const errorStatus: HealthStatus = { 
+        setVersionStatus({ 
           status: 'DOWN', 
           timestamp: new Date().toISOString(), 
-          service: 'gateway-service', 
+          service: 'mock-backend', 
           version: 'unknown' 
-        };
-        setVersionStatus(errorStatus);
+        });
       }
 
       toast.success('Health check completed');
@@ -83,7 +88,7 @@ const HealthCheck: React.FC<HealthCheckProps> = ({ className }) => {
       const errorStatus: HealthStatus = { 
         status: 'DOWN', 
         timestamp: new Date().toISOString(), 
-        service: 'gateway-service', 
+        service: 'mock-backend', 
         version: 'unknown' 
       };
       setHealthStatus(errorStatus);
@@ -96,6 +101,14 @@ const HealthCheck: React.FC<HealthCheckProps> = ({ className }) => {
 
   useEffect(() => {
     checkHealth();
+    
+    // Check CORS compatibility
+    const currentOrigin = window.location.origin;
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+    
+    if (currentOrigin !== 'http://localhost:5173' && currentOrigin !== 'http://localhost:5174') {
+      console.warn(`CORS Warning: Frontend origin ${currentOrigin} may not be in backend ALLOWED_ORIGINS`);
+    }
   }, []);
 
   const getStatusIcon = (status: string) => {
@@ -215,7 +228,7 @@ const HealthCheck: React.FC<HealthCheckProps> = ({ className }) => {
           </div>
 
           <div className="text-xs text-gray-500 text-center">
-            Backend URL: http://localhost:8080
+            Backend URL: {import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081'}
           </div>
         </CardContent>
       </Card>

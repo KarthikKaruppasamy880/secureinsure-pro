@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,6 +43,7 @@ import java.util.Map;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final ObjectMapper objectMapper;
 
     @PostMapping
     @Operation(summary = "Create a new notification", description = "Creates a new notification")
@@ -102,9 +105,11 @@ public class NotificationController {
     @GetMapping("/user/{userId}")
     @Operation(summary = "Get notifications by user ID", description = "Retrieves all notifications for a specific user")
     @PreAuthorize("hasRole('USER') or hasRole('AGENT') or hasRole('ADMIN')")
-    public ResponseEntity<List<NotificationDto>> getNotificationsByUserId(@PathVariable Long userId) {
+    public ResponseEntity<Page<NotificationDto>> getNotificationsByUserId(
+            @PathVariable Long userId,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("Getting notifications for user: {}", userId);
-        List<NotificationDto> notifications = notificationService.getNotificationsByUserId(userId);
+        Page<NotificationDto> notifications = notificationService.getNotificationsByUserId(userId, pageable);
         return ResponseEntity.ok(notifications);
     }
 
@@ -148,7 +153,22 @@ public class NotificationController {
             @Valid @RequestBody NotificationDto searchCriteria,
             @PageableDefault(size = 20) Pageable pageable) {
         log.info("Searching notifications with criteria");
-        Page<NotificationDto> notifications = notificationService.searchNotifications(searchCriteria, pageable);
+        Page<NotificationDto> notifications = notificationService.searchNotifications(
+                searchCriteria.getUserId(),
+                searchCriteria.getType(),
+                searchCriteria.getCategory(),
+                searchCriteria.getStatus(),
+                searchCriteria.getPriority(),
+                searchCriteria.getSourceService(),
+                searchCriteria.getRelatedEntityType(),
+                searchCriteria.getRelatedEntityId(),
+                searchCriteria.getEmailAddress(),
+                searchCriteria.getPhoneNumber(),
+                searchCriteria.getTitle(),
+                searchCriteria.getMessage(),
+                searchCriteria.getCreatedAt(),
+                null, // endDate
+                pageable);
         return ResponseEntity.ok(notifications);
     }
 
@@ -195,7 +215,7 @@ public class NotificationController {
     @PreAuthorize("hasRole('AGENT') or hasRole('ADMIN')")
     public ResponseEntity<Void> retryNotification(@PathVariable Long id) {
         log.info("Retrying notification with ID: {}", id);
-        notificationService.retryNotification(id);
+        notificationService.retryFailedNotification(id);
         return ResponseEntity.ok().build();
     }
 
@@ -294,14 +314,14 @@ public class NotificationController {
                 .priority(PriorityLevel.NORMAL)
                 .deliveryMethods(List.of(com.secureinsure.notification.entity.DeliveryMethod.EMAIL))
                 .templateId("policy_created_email")
-                .templateData(Map.of(
+                .templateData(convertMapToJson(Map.of(
                         "customerName", customerName,
                         "policyNumber", policyNumber,
                         "coverageType", coverageType,
                         "premiumAmount", premiumAmount,
                         "startDate", startDate,
                         "endDate", endDate
-                ))
+                )))
                 .build();
         
         notificationService.sendNotificationImmediately(notificationDto);
@@ -329,12 +349,12 @@ public class NotificationController {
                 .deliveryMethods(List.of(com.secureinsure.notification.entity.DeliveryMethod.EMAIL, 
                                        com.secureinsure.notification.entity.DeliveryMethod.SMS))
                 .templateId("claim_submitted_email")
-                .templateData(Map.of(
+                .templateData(convertMapToJson(Map.of(
                         "claimNumber", claimNumber,
                         "policyNumber", policyNumber,
                         "claimType", claimType,
                         "estimatedAmount", estimatedAmount
-                ))
+                )))
                 .build();
         
         notificationService.sendNotificationImmediately(notificationDto);
@@ -360,10 +380,10 @@ public class NotificationController {
                 .deliveryMethods(List.of(com.secureinsure.notification.entity.DeliveryMethod.EMAIL))
                 .emailAddress(email)
                 .templateId("password_reset_email")
-                .templateData(Map.of(
+                .templateData(convertMapToJson(Map.of(
                         "resetToken", resetToken,
                         "email", email
-                ))
+                )))
                 .build();
         
         notificationService.sendNotificationImmediately(notificationDto);
@@ -390,11 +410,11 @@ public class NotificationController {
                 .deliveryMethods(List.of(com.secureinsure.notification.entity.DeliveryMethod.EMAIL))
                 .emailAddress(email)
                 .templateId("welcome_email")
-                .templateData(Map.of(
+                .templateData(convertMapToJson(Map.of(
                         "firstName", firstName,
                         "lastName", lastName,
                         "fullName", firstName + " " + lastName
-                ))
+                )))
                 .build();
         
         notificationService.sendNotificationImmediately(notificationDto);
@@ -422,14 +442,23 @@ public class NotificationController {
                                        com.secureinsure.notification.entity.DeliveryMethod.SMS))
                 .emailAddress(email)
                 .templateId("security_alert_email")
-                .templateData(Map.of(
+                .templateData(convertMapToJson(Map.of(
                         "alertType", alertType,
                         "description", description,
                         "timestamp", LocalDateTime.now().toString()
-                ))
+                )))
                 .build();
         
         notificationService.sendNotificationImmediately(notificationDto);
         return ResponseEntity.ok(notificationDto);
+    }
+    
+    private String convertMapToJson(Map<String, String> map) {
+        try {
+            return objectMapper.writeValueAsString(map);
+        } catch (Exception e) {
+            log.error("Error converting map to JSON", e);
+            return "{}";
+        }
     }
 } 

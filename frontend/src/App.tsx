@@ -1,143 +1,68 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { SocketProvider } from './contexts/SocketContext';
-
-// Layout Components
+import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-
-// Pages
 import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
-import PoliciesPage from './pages/policies/PoliciesPage';
-import ClaimsPage from './pages/claims/ClaimsPage';
-import AdminPage from './pages/admin/AdminPage';
-import ProfilePage from './pages/profile/ProfilePage';
+import ApplicationDetails from './pages/forms/ApplicationDetails';
+import ApplicationDetailsV2 from './pages/ApplicationDetailsV2';
+import ApplicationDetailsLegacy from './pages/ApplicationDetailsLegacy';
+import ExamOneResultsPage from './pages/forms/ExamOneResultsPage';
+import LabOrderPopup from './pages/forms/LabOrderPopup';
+import ExamOneOrder from './screens/ExamOneOrder';
+import ExamOne from './pages/ExamOne';
 import SearchPage from './pages/search/SearchPage';
 import ChatbotPage from './pages/chatbot/ChatbotPage';
-import ApplicationDetails from './pages/forms/ApplicationDetails';
+import ProfilePage from './pages/profile/ProfilePage';
+import NotificationsPage from './pages/notifications/NotificationsPage';
+import CreateCasePage from './pages/create-case/CreateCasePage';
+import AdminPage from './pages/admin/AdminPage';
+import UnderwritingPage from './pages/underwriting/UnderwritingPage';
+import AuditPage from './pages/audit/AuditPage';
+import PoliciesPage from './pages/policies/PoliciesPage';
+import ClaimsPage from './pages/claims/ClaimsPage';
+import { flags } from './lib/flags';
 
-// New Phase 6 Components
-import UnderwritingDashboard from './components/Underwriting/UnderwritingDashboard';
-import AuditDashboard from './components/AdminPanel/AuditDashboard';
-
-// Phase 7: Error Handling Components
-import ErrorBoundary from './components/ui/ErrorBoundary';
-
-// Styles
-import './App.css';
-
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
-
-function App() {
+export default function App(){
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <Router>
-            <AuthProvider>
-              <SocketProvider>
-                <div className="App">
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  
-                  {/* Protected Routes */}
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <Layout />
-                    </ProtectedRoute>
-                  }>
-                    <Route index element={<Navigate to="/dashboard" replace />} />
-                    <Route path="dashboard" element={<DashboardPage />} />
-                    <Route path="policies" element={<PoliciesPage />} />
-                    <Route path="claims" element={<ClaimsPage />} />
-                    
-                    {/* Admin Routes - Restricted to ADMIN role */}
-                    <Route path="admin" element={
-                      <ProtectedRoute requiredRoles={['ADMIN']}>
-                        <AdminPage />
-                      </ProtectedRoute>
-                    } />
-                    
-                    {/* Underwriting Routes - Restricted to UNDERWRITER and ADMIN roles */}
-                    <Route path="underwriting" element={
-                      <ProtectedRoute 
-                        requiredRoles={['UNDERWRITER', 'ADMIN']}
-                        requiredFeatures={['PremiumCalculator', 'RiskAssessment']}
-                      >
-                        <UnderwritingDashboard />
-                      </ProtectedRoute>
-                    } />
-                    
-                    {/* Audit Routes - Restricted to ADMIN role */}
-                    <Route path="audit" element={
-                      <ProtectedRoute 
-                        requiredRoles={['ADMIN']}
-                        requiredPermissions={['VIEW_AUDIT_LOGS']}
-                      >
-                        <AuditDashboard />
-                      </ProtectedRoute>
-                    } />
-                    
-                    <Route path="profile" element={<ProfilePage />} />
-                    <Route path="search" element={<SearchPage />} />
-                    <Route path="chatbot" element={<ChatbotPage />} />
-                    <Route path="application/:id" element={<ApplicationDetails />} />
-                    <Route path="application" element={<ApplicationDetails />} />
-                  </Route>
-                  
-                  {/* Catch all route */}
-                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                </Routes>
-                
-                {/* Global toast notifications */}
-                <Toaster
-                  position="top-right"
-                  toastOptions={{
-                    duration: 4000,
-                    style: {
-                      background: '#363636',
-                      color: '#fff',
-                    },
-                    success: {
-                      duration: 3000,
-                      iconTheme: {
-                        primary: '#4ade80',
-                        secondary: '#fff',
-                      },
-                    },
-                    error: {
-                      duration: 5000,
-                      iconTheme: {
-                        primary: '#ef4444',
-                        secondary: '#fff',
-                      },
-                    },
-                  }}
-                />
-              </div>
-            </SocketProvider>
-          </AuthProvider>
-        </Router>
-      </ThemeProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    );
+    <AuthProvider>
+      <SocketProvider>
+        <Routes>
+          {/* Auth Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Main App Routes with Layout */}
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="search" element={<SearchPage />} />
+            <Route path="chatbot" element={<ChatbotPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="create-case" element={<CreateCasePage />} />
+            <Route path="admin" element={<AdminPage />} />
+            <Route path="underwriting" element={<UnderwritingPage />} />
+            <Route path="audit" element={<AuditPage />} />
+            <Route path="policies" element={<PoliciesPage />} />
+            <Route path="claims" element={<ClaimsPage />} />
+            
+            {/* Case Routes */}
+            <Route path="cases/:caseId" element={flags.appdetV2 ? <ApplicationDetailsV2 /> : <ApplicationDetailsLegacy />} />
+            <Route path="cases/:caseId/examone" element={<ExamOneResultsPage />} />
+            {/* Legacy route support */}
+            <Route path="case/:caseId" element={flags.appdetV2 ? <ApplicationDetailsV2 /> : <ApplicationDetailsLegacy />} />
+          </Route>
+          
+          {/* Standalone popup routes (no layout) */}
+          <Route path="/lab-order" element={<LabOrderPopup />} />
+          <Route path="/examone/order" element={<ExamOneOrder />} />
+          <Route path="/examone" element={<ExamOne />} />
+          <Route path="/examone/result" element={<ExamOne />} />
+          
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </SocketProvider>
+    </AuthProvider>
+  );
 }
-
-export default App;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { useAccessControl } from '../../hooks/useAccessControl';
@@ -60,6 +61,7 @@ const UnderwritingDashboard: React.FC = () => {
   const [premiumRates, setPremiumRates] = useState<PremiumRate[]>([]);
   const [underwritingRules, setUnderwritingRules] = useState<UnderwritingRule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Check if user has underwriter access
   const canAccessUnderwriting = accessControl.canUnderwrite();
@@ -300,6 +302,11 @@ const UnderwritingDashboard: React.FC = () => {
     return 'text-red-600';
   };
 
+  const filteredAssessments = riskAssessments.filter(a =>
+    a.insuredName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    a.caseId.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -441,8 +448,17 @@ const UnderwritingDashboard: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-4 flex items-center gap-3">
+                <Input
+                  placeholder="Search by insured or case ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-sm"
+                />
+                <Button variant="outline" onClick={() => setSearchTerm('')}>Reset</Button>
+              </div>
               <div className="space-y-4">
-                {riskAssessments.map((assessment) => (
+                {filteredAssessments.map((assessment) => (
                   <div key={assessment.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div>

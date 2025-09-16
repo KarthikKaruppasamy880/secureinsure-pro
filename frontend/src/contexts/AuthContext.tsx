@@ -127,7 +127,7 @@ interface RegisterData {
   lastName: string;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Provider
 interface AuthProviderProps {
@@ -269,6 +269,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (token) {
         try {
           const userInfo = await authService.getUserInfo();
+          if (!userInfo) {
+            // getUserInfo returned null (CORS/auth issue), clear invalid token
+            console.warn('getUserInfo returned null, clearing invalid token');
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            dispatch({ type: 'LOGOUT' });
+            return;
+          }
+          
           const user: User = {
             id: userInfo.userId,
             username: userInfo.username,
@@ -333,8 +342,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
       
-      // Navigate to dashboard immediately
-      navigate('/dashboard');
+      // Only navigate to dashboard if we're on the root path or login page
+      const currentPath = window.location.pathname;
+      if (currentPath === '/' || currentPath === '/login') {
+        navigate('/dashboard');
+      }
     }
   }, [dispatch, navigate, state.isAuthenticated]);
 

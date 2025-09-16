@@ -91,12 +91,30 @@ describe('FormEngine', () => {
     }
   ];
 
+  const mockConfig = {
+    version: '1.0',
+    generatedAt: new Date().toISOString(),
+    sourceFile: 'test.xlsx',
+    sheets: {
+      'TestSheet': {
+        fields: mockFields,
+        metadata: {
+          totalFields: 4,
+          mandatoryFields: 3,
+          optionalFields: 1
+        }
+      }
+    }
+  };
+
   const defaultProps = {
-    fields: mockFields,
-    data: {},
-    onChange: jest.fn(),
-    onSubmit: jest.fn(),
-    isLoading: false
+    config: mockConfig,
+    initialData: {},
+    onSave: jest.fn(),
+    onCancel: jest.fn(),
+    isAdmin: false,
+    isEditing: true,
+    onToggleEdit: jest.fn()
   };
 
   beforeEach(() => {
@@ -149,7 +167,7 @@ describe('FormEngine', () => {
   describe('Field Interactions', () => {
     it('should handle text input changes', async () => {
       const onChange = jest.fn();
-      render(<FormEngine {...defaultProps} onChange={onChange} />);
+      render(<FormEngine {...defaultProps} />);
 
       const firstNameInput = screen.getByLabelText(/first name/i);
       fireEvent.change(firstNameInput, { target: { value: 'John' } });
@@ -161,7 +179,7 @@ describe('FormEngine', () => {
 
     it('should handle email input changes', async () => {
       const onChange = jest.fn();
-      render(<FormEngine {...defaultProps} onChange={onChange} />);
+      render(<FormEngine {...defaultProps} />);
 
       const emailInput = screen.getByLabelText(/email/i);
       fireEvent.change(emailInput, { target: { value: 'john@example.com' } });
@@ -173,7 +191,7 @@ describe('FormEngine', () => {
 
     it('should handle number input changes', async () => {
       const onChange = jest.fn();
-      render(<FormEngine {...defaultProps} onChange={onChange} />);
+      render(<FormEngine {...defaultProps} />);
 
       const ageInput = screen.getByLabelText(/age/i);
       fireEvent.change(ageInput, { target: { value: '25' } });
@@ -185,7 +203,7 @@ describe('FormEngine', () => {
 
     it('should handle textarea changes', async () => {
       const onChange = jest.fn();
-      render(<FormEngine {...defaultProps} onChange={onChange} />);
+      render(<FormEngine {...defaultProps} />);
 
       const commentsTextarea = screen.getByLabelText(/comments/i);
       fireEvent.change(commentsTextarea, { target: { value: 'Some comments' } });
@@ -199,7 +217,7 @@ describe('FormEngine', () => {
   describe('Validation', () => {
     it('should show validation errors for required fields', async () => {
       const data = { 'First Name': '', 'Email': '', 'Age': '' };
-      render(<FormEngine {...defaultProps} data={data} />);
+      render(<FormEngine {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /submit/i });
       fireEvent.click(submitButton);
@@ -213,7 +231,7 @@ describe('FormEngine', () => {
 
     it('should validate email format', async () => {
       const data = { 'Email': 'invalid-email' };
-      render(<FormEngine {...defaultProps} data={data} />);
+      render(<FormEngine {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /submit/i });
       fireEvent.click(submitButton);
@@ -225,7 +243,7 @@ describe('FormEngine', () => {
 
     it('should validate number ranges', async () => {
       const data = { 'Age': '150' };
-      render(<FormEngine {...defaultProps} data={data} />);
+      render(<FormEngine {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /submit/i });
       fireEvent.click(submitButton);
@@ -237,7 +255,7 @@ describe('FormEngine', () => {
 
     it('should validate minimum length', async () => {
       const data = { 'First Name': 'A' };
-      render(<FormEngine {...defaultProps} data={data} />);
+      render(<FormEngine {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /submit/i });
       fireEvent.click(submitButton);
@@ -249,7 +267,7 @@ describe('FormEngine', () => {
 
     it('should validate maximum length', async () => {
       const data = { 'Comments': 'A'.repeat(600) };
-      render(<FormEngine {...defaultProps} data={data} />);
+      render(<FormEngine {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /submit/i });
       fireEvent.click(submitButton);
@@ -270,7 +288,7 @@ describe('FormEngine', () => {
         'Comments': 'Test comments'
       };
 
-      render(<FormEngine {...defaultProps} data={validData} onSubmit={onSubmit} />);
+      render(<FormEngine {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /submit/i });
       fireEvent.click(submitButton);
@@ -288,7 +306,7 @@ describe('FormEngine', () => {
         'Age': '150'
       };
 
-      render(<FormEngine {...defaultProps} data={invalidData} onSubmit={onSubmit} />);
+      render(<FormEngine {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /submit/i });
       fireEvent.click(submitButton);
@@ -299,7 +317,7 @@ describe('FormEngine', () => {
     });
 
     it('should show loading state during submission', () => {
-      render(<FormEngine {...defaultProps} isLoading={true} />);
+      render(<FormEngine {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /submitting/i });
       expect(submitButton).toBeDisabled();
@@ -315,7 +333,7 @@ describe('FormEngine', () => {
         'Comments': 'Initial comments'
       };
 
-      render(<FormEngine {...defaultProps} data={initialData} />);
+      render(<FormEngine {...defaultProps} />);
 
       expect(screen.getByDisplayValue('Jane')).toBeInTheDocument();
       expect(screen.getByDisplayValue('jane@example.com')).toBeInTheDocument();
@@ -329,7 +347,7 @@ describe('FormEngine', () => {
         'Age': '25'
       };
 
-      render(<FormEngine {...defaultProps} data={partialData} />);
+      render(<FormEngine {...defaultProps} />);
 
       expect(screen.getByDisplayValue('John')).toBeInTheDocument();
       expect(screen.getByDisplayValue('25')).toBeInTheDocument();
@@ -357,7 +375,7 @@ describe('FormEngine', () => {
 
     it('should associate error messages with inputs', async () => {
       const data = { 'First Name': '' };
-      render(<FormEngine {...defaultProps} data={data} />);
+      render(<FormEngine {...defaultProps} />);
 
       const submitButton = screen.getByRole('button', { name: /submit/i });
       fireEvent.click(submitButton);

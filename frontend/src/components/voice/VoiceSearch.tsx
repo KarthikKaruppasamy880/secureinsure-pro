@@ -1,9 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Mic, MicOff, Search, X, Volume2 } from 'lucide-react';
+import { Mic, MicOff, Search, X, Volume2, Shield, AlertTriangle } from 'lucide-react';
 import { Badge } from '../ui/badge';
+import { voiceWebSocketService } from '../../services/voiceWebSocketService';
+import { toast } from 'react-hot-toast';
+import { assertSecureContext, getSecureContextMessage, requestMicrophonePermission } from '../../utils/secureContext';
 
 interface VoiceSearchProps {
   onSearch: (filters: SearchFilters) => void;
@@ -34,47 +37,266 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState<SearchFilters>({});
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLocalMode, setIsLocalMode] = useState(false);
+  const [hasConsent, setHasConsent] = useState(false);
+  const [showConsentDialog, setShowConsentDialog] = useState(true);
   
   const recognitionRef = useRef<any>(null);
 
-  const startListening = () => {
+  useEffect(() => {
+    // STT readiness detection
+    const hasSpeech = typeof (window as any).SpeechRecognition !== 'undefined' || typeof (window as any).webkitSpeechRecognition !== 'undefined';
+    const hasMedia = !!navigator.mediaDevices?.getUserMedia;
+    if (!hasSpeech) {
+      toast.error('Speech recognition not supported in this browser.');
+      return;
+    }
+    if (!hasMedia) {
+      toast.error('Microphone access not supported in this browser.');
+      return;
+    }
+
+    // Keyboard shortcut for voice search (Ctrl/Cmd + Shift + V)
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'V') {
+        event.preventDefault();
+        if (!isListening) {
+          startListening();
+        } else {
+          stopListening();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Initialize WebSocket connection only if WS URL is configured
+    const wsUrl = import.meta.env.VITE_WS_URL || import.meta.env.VITE_WEBSOCKET_URL;
+    // Disable WebSocket to prevent conflicts with SocketContext
+    console.log('Voice WebSocket disabled to prevent conflicts with SocketContext');
+    setIsLocalMode(true);
+    setIsConnected(false);
+    
+    if (false) { // Disabled WebSocket connection
+      const initWebSocket = async () => {
+        try {
+          await voiceWebSocketService.connect();
+          setIsConnected(true);
+          
+          // Set up event listeners
+          voiceWebSocketService.on('connected', () => {
+            setIsConnected(true);
+            toast.success('Voice agent connected');
+          });
+          
+          voiceWebSocketService.on('disconnected', () => {
+            setIsConnected(false);
+            toast.warning('Voice agent disconnected');
+          });
+          
+          voiceWebSocketService.on('stt_partial', (data) => {
+            setTranscript(data.text || '');
+          });
+          
+          voiceWebSocketService.on('stt_final', (data) => {
+            setTranscript(data.text || '');
+            processVoiceCommand(data.text || '');
+          });
+          
+          voiceWebSocketService.on('nlu_intent', (data) => {
+            if (import.meta.env.DEV) {
+              // eslint-disable-next-line no-console
+              console.debug('[VOICE]', { transcript, intent: data.intent, entities: data.data });
+            }
+            // Handle different intents
+            handleIntent(data.intent, data.data);
+          });
+          
+          voiceWebSocketService.on('tool_result', (data) => {
+            if (import.meta.env.DEV) {
+              // eslint-disable-next-line no-console
+              console.debug('[VOICE tool]', data);
+            }
+            // Handle tool results (API responses)
+            handleToolResult(data);
+          });
+          
+          voiceWebSocketService.on('tts_response', (data) => {
+            // Handle text-to-speech response
+            if (data.text) {
+              speakResponse(data.text);
+            }
+          });
+          
+          voiceWebSocketService.on('error', (error) => {
+            console.error('Voice service error:', error);
+            toast.error('Voice service error occurred');
+          });
+          
+        } catch (error) {
+          console.error('Failed to connect to voice service:', error);
+          if (import.meta.env.DEV) {
+            console.log('Voice service will work in local mode without WebSocket');
+          }
+          setIsLocalMode(true);
+          setIsConnected(false);
+        }
+      };
+
+      initWebSocket();
+    }
+
+    return () => {
+      voiceWebSocketService.disconnect();
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isListening]);
+
+  // Local fallback processing when WebSocket is not available
+  const processLocalVoiceCommand = (command: string) => {
+    if (isLocalMode) {
+      const localResult = voiceWebSocketService.processLocalVoiceCommand(command);
+      if (localResult.intent !== 'unknown') {
+        handleIntent(localResult.intent, localResult.data);
+      }
+    }
+  };
+
+  const handleConsent = (consent: boolean) => {
+    setHasConsent(consent);
+    setShowConsentDialog(false);
+    
+    if (consent) {
+      toast.success('Voice consent granted. You can now use voice commands.');
+    } else {
+      toast.info('Voice features disabled. You can enable them later in settings.');
+    }
+  };
+
+  const startListening = async () => {
+    if (!hasConsent) {
+      setShowConsentDialog(true);
+      return;
+    }
+
+    // In local mode, we're always "connected"
+    if (!isConnected && import.meta.env.VITE_WS_URL?.trim()) {
+      toast.error('Voice service not connected. Please try again.');
+      return;
+    }
+
+    try {
+      // Check secure context and request mic permission
+      if (!assertSecureContext()) {
+        toast.error(getSecureContextMessage());
+        return;
+      }
+      
+      await requestMicrophonePermission();
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error('Microphone permission denied.');
+      }
+      return;
+    }
+
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       
       recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'en-US';
       
       recognitionRef.current.onstart = () => {
         setIsListening(true);
         setTranscript('Listening...');
+        
+        // Send start listening message to WebSocket
+        voiceWebSocketService.sendMessageWithRateLimit({
+          type: 'stt_start'
+        });
       };
       
       recognitionRef.current.onresult = (event: any) => {
-        const finalTranscript = event.results[0][0].transcript;
-        setTranscript(finalTranscript);
-        setSearchQuery(finalTranscript);
+        let interimTranscript = '';
+        let finalTranscript = '';
         
-        // Call the voice command handler if provided
-        if (onVoiceCommand) {
-          onVoiceCommand(finalTranscript);
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
         }
         
-        processVoiceCommand(finalTranscript);
+        // Update local transcript
+        setTranscript(interimTranscript || finalTranscript);
+        
+        // Send to WebSocket service
+        if (interimTranscript) {
+          voiceWebSocketService.sendMessageWithRateLimit({
+            type: 'stt_partial',
+            text: redactPII(interimTranscript)
+          });
+        }
+        
+        if (finalTranscript) {
+          setSearchQuery(finalTranscript);
+          
+          // Call the voice command handler if provided
+          if (onVoiceCommand) {
+            onVoiceCommand(finalTranscript);
+          }
+          
+          // Send final transcript to WebSocket
+          voiceWebSocketService.sendMessageWithRateLimit({
+            type: 'stt_final',
+            text: redactPII(finalTranscript)
+          });
+          
+          processVoiceCommand(finalTranscript);
+        }
       };
       
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
         setTranscript('Error occurred. Please try again.');
+        
+        // Send error to WebSocket
+        voiceWebSocketService.sendMessageWithRateLimit({
+          type: 'error',
+          data: { error: event.error }
+        });
       };
       
       recognitionRef.current.onend = () => {
         setIsListening(false);
+        
+        // Send end listening message to WebSocket
+        voiceWebSocketService.sendMessageWithRateLimit({
+          type: 'stt_end'
+        });
       };
       
-      recognitionRef.current.start();
+      // Retry start up to 2 times on failure
+      const tryStart = async (attempt = 1) => {
+        try {
+          recognitionRef.current.start();
+        } catch (e) {
+          if (attempt < 2) {
+            setTimeout(() => tryStart(attempt + 1), 300);
+          } else {
+            toast.error('Failed to start speech recognition.');
+          }
+        }
+      };
+      tryStart();
     } else {
       alert('Speech recognition is not supported in this browser.');
     }
@@ -85,6 +307,97 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({
       recognitionRef.current.stop();
     }
     setIsListening(false);
+  };
+
+  const redactPII = (text: string): string => {
+    // Redact PII as specified in Phase 4 requirements
+    return text
+      .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[SSN]') // SSN pattern
+      .replace(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g, '[DOB]') // Date of birth
+      .replace(/\b\d{3}-\d{3}-\d{4}\b/g, '[PHONE]') // Phone number
+      .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]'); // Email
+  };
+
+  const handleIntent = (intent: string, data: any) => {
+    console.log('Processing intent:', intent, data);
+    
+    switch (intent) {
+      case 'search_cases':
+        if (data.filters) {
+          setActiveFilters(data.filters);
+          onSearch(data.filters);
+          toast.success(`Searching for cases with filters: ${JSON.stringify(data.filters)}`);
+        }
+        break;
+        
+      case 'open_case':
+        if (data.caseId) {
+          // Navigate to case details
+          const caseId = data.caseId;
+          toast.success(`Opening case: ${caseId}`);
+          // Emit navigation event for parent component to handle
+          if (onVoiceCommand) {
+            onVoiceCommand(`navigate_to_case:${caseId}`);
+          }
+        }
+        break;
+        
+      case 'filter_by_status':
+        if (data.status) {
+          const filters = { caseStatus: data.status };
+          setActiveFilters(filters);
+          onSearch(filters);
+          toast.success(`Filtering cases by status: ${data.status}`);
+        }
+        break;
+        
+      case 'filter_by_priority':
+        if (data.priority) {
+          const filters = { priority: data.priority };
+          setActiveFilters(filters);
+          onSearch(filters);
+          toast.success(`Filtering cases by priority: ${data.priority}`);
+        }
+        break;
+        
+      case 'filter_by_date':
+        if (data.dateRange) {
+          const filters = { appDate: data.dateRange };
+          setActiveFilters(filters);
+          onSearch(filters);
+          toast.success(`Filtering cases by date range: ${data.dateRange}`);
+        }
+        break;
+        
+      case 'clear_filters':
+        setActiveFilters({});
+        onClearFilters();
+        toast.success('All filters cleared');
+        break;
+        
+      default:
+        console.log('Unknown intent:', intent);
+        toast.info(`Voice command not recognized: ${intent}`);
+    }
+  };
+
+  const handleToolResult = (data: any) => {
+    if (data.type === 'search_result') {
+      // Handle search results from backend
+      if (data.filters) {
+        setActiveFilters(data.filters);
+        onSearch(data.filters);
+      }
+    }
+  };
+
+  const speakResponse = (text: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      speechSynthesis.speak(utterance);
+    }
   };
 
   const processVoiceCommand = (command: string) => {
@@ -133,6 +446,53 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({
       }
     }
 
+    // Enhanced priority filtering
+    if (commandLower.includes('priority') || commandLower.includes('urgent') || commandLower.includes('high priority')) {
+      if (commandLower.includes('urgent') || commandLower.includes('high priority')) {
+        filters.priority = 'urgent';
+      } else if (commandLower.includes('high')) {
+        filters.priority = 'high';
+      } else if (commandLower.includes('medium')) {
+        filters.priority = 'medium';
+      } else if (commandLower.includes('low')) {
+        filters.priority = 'low';
+      }
+    }
+
+    // Date range filtering
+    if (commandLower.includes('last week') || commandLower.includes('past week')) {
+      filters.appDate = 'last_week';
+    } else if (commandLower.includes('last month') || commandLower.includes('past month')) {
+      filters.appDate = 'last_month';
+    } else if (commandLower.includes('today') || commandLower.includes('this week')) {
+      filters.appDate = 'this_week';
+    } else if (commandLower.includes('yesterday')) {
+      filters.appDate = 'yesterday';
+    }
+
+    // Face amount filtering
+    if (commandLower.includes('face amount') || commandLower.includes('coverage')) {
+      const amountMatch = command.match(/(\d+(?:,\d{3})*(?:\.\d{2})?)\s*(?:k|thousand|m|million|b|billion)?/i);
+      if (amountMatch) {
+        let amount = parseFloat(amountMatch[1].replace(/,/g, ''));
+        if (commandLower.includes('k') || commandLower.includes('thousand')) {
+          amount *= 1000;
+        } else if (commandLower.includes('m') || commandLower.includes('million')) {
+          amount *= 1000000;
+        } else if (commandLower.includes('b') || commandLower.includes('billion')) {
+          amount *= 1000000000;
+        }
+        filters.faceAmount = amount.toString();
+      }
+    }
+
+    // Help command
+    if (commandLower.includes('help') || commandLower.includes('what can you do')) {
+      showVoiceHelp();
+      setIsProcessing(false);
+      return;
+    }
+
     if (commandLower.includes('clear') || commandLower.includes('clear all') || commandLower.includes('reset')) {
       setActiveFilters({});
       onClearFilters();
@@ -142,11 +502,21 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({
       return;
     }
 
+    if (import.meta.env.DEV) {
+      // eslint-disable-next-line no-console
+      console.debug('[VOICE]', { transcript: command, intent: 'parsed', entities: filters });
+    }
+
     // Update active filters
     setActiveFilters(filters);
     
     // Call search callback
     onSearch(filters);
+    
+    // If in local mode, also process with local intent recognition
+    if (isLocalMode) {
+      processLocalVoiceCommand(command);
+    }
     
     setIsProcessing(false);
   };
@@ -189,15 +559,133 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({
     onSearch(newFilters);
   };
 
+  const showVoiceHelp = () => {
+    const helpText = `
+Voice Commands Available:
+
+🔍 Search & Filter:
+• "Show active cases" - Filter by active status
+• "Show pending cases" - Filter by pending status  
+• "Show approved cases" - Filter by approved status
+• "Show rejected cases" - Filter by rejected status
+• "Show high priority cases" - Filter by priority
+• "Show cases from last week" - Filter by date range
+
+👤 Case Lookup:
+• "Find case CS-2024-001" - Search by case ID
+• "Find policy POL-001" - Search by policy number
+• "Find insured John Doe" - Search by insured name
+• "Find Zinnia case ZC-001" - Search by Zinnia case ID
+
+💰 Coverage & Amounts:
+• "Show cases with $500k coverage" - Filter by face amount
+• "Show million dollar policies" - Filter by coverage amount
+
+🔄 Management:
+• "Clear all filters" - Reset all search filters
+• "Help" - Show this help message
+
+💡 Tips:
+• Speak clearly and naturally
+• Use specific case IDs or policy numbers
+• Combine filters: "Show urgent cases from last week"
+    `;
+    
+    toast.success('Voice help displayed in console');
+    console.log(helpText);
+    
+    // Also show a more user-friendly toast
+    toast.info('Voice commands help available. Check console for full list.', {
+      duration: 4000,
+      icon: '🎤'
+    });
+  };
+
+  // Consent Dialog
+  if (showConsentDialog) {
+    return (
+      <Card className={`space-y-4 ${className}`}>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Shield className="h-5 w-5 mr-2 text-blue-600" />
+            Voice Assistant Consent
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-blue-900">Privacy & Security Notice</h4>
+                <p className="text-sm text-blue-800 mt-1">
+                  The voice assistant processes your voice commands to help you search and manage insurance cases. 
+                  All PII (SSN, DOB, phone, email) is automatically redacted for security.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex space-x-3">
+            <Button
+              onClick={() => handleConsent(true)}
+              className="btn-primary flex-1"
+            >
+              <Mic className="h-4 w-4 mr-2" />
+              Enable Voice Assistant
+            </Button>
+            <Button
+              onClick={() => handleConsent(false)}
+              variant="outline"
+              className="flex-1"
+            >
+              Disable Voice Features
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className={`space-y-4 ${className}`}>
+             {/* Connection Status */}
+       <div className="flex items-center justify-between">
+         <div className="flex items-center space-x-2">
+           <div className={`w-2 h-2 rounded-full ${
+             isLocalMode ? 'bg-yellow-500' : 
+             isConnected ? 'bg-green-500' : 'bg-red-500'
+           }`}></div>
+           <span id="voice-status" className="text-sm text-gray-600">
+             Voice Agent: {
+               isLocalMode ? 'Local Mode' :
+               isConnected ? 'Connected' : 'Disconnected'
+             }
+           </span>
+         </div>
+        
+        {!hasConsent && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowConsentDialog(true)}
+            className="text-blue-600"
+          >
+            <Shield className="h-4 w-4 mr-1" />
+            Enable Voice
+          </Button>
+        )}
+      </div>
+
       {/* Voice Search Controls */}
       <div className="flex items-center space-x-3">
-        <Button
-          onClick={isListening ? stopListening : startListening}
-          className={`btn-primary ${isListening ? 'animate-pulse' : ''}`}
-          disabled={isProcessing}
-        >
+                 <Button
+           onClick={isListening ? stopListening : startListening}
+           className={`btn-primary ${isListening ? 'animate-pulse' : ''}`}
+           disabled={isProcessing || !hasConsent || (!isConnected && !isLocalMode)}
+           aria-label={isListening ? 'Stop voice listening' : 'Start voice search'}
+           aria-describedby="voice-status"
+           title={`${isListening ? 'Stop' : 'Start'} voice search (${navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+Shift+V)`}
+         >
           {isListening ? (
             <>
               <MicOff className="h-4 w-4 mr-2" />
@@ -210,6 +698,28 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({
             </>
           )}
         </Button>
+                 <Button
+           variant="outline"
+           onClick={async () => {
+             try {
+               if (!assertSecureContext()) {
+                 toast.error(getSecureContextMessage());
+                 return;
+               }
+               
+               await requestMicrophonePermission();
+               toast.success('Microphone is working.');
+             } catch (e) {
+               if (e instanceof Error) {
+                 toast.error(e.message);
+               } else {
+                 toast.error('Microphone test failed.');
+               }
+             }
+           }}
+         >
+           Test mic
+         </Button>
         
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

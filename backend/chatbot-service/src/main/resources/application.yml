@@ -1,0 +1,61 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: chatbot-service
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/secureinsure_chatbot
+    username: ${DB_USERNAME:secureinsure}
+    password: ${DB_PASSWORD:secureinsure123}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  cloud:
+    discovery:
+      enabled: true
+      client:
+        simple:
+          instances:
+            eureka:
+              - host: localhost
+                port: 8761
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+logging:
+  level:
+    com.secureinsure.chatbot: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+services:
+  policy-service:
+    url: http://policy-service:8080
+  claims-service:
+    url: http://claims-service:8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

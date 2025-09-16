@@ -30,6 +30,12 @@ const FaceDetection: React.FC<FaceDetectionProps> = ({
 
   const checkCameraPermission = async () => {
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraPermission('denied');
+        onError('Camera access not supported in this browser');
+        return;
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       stream.getTracks().forEach(track => track.stop());
       setCameraPermission('granted');

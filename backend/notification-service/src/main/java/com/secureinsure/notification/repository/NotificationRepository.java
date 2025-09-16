@@ -220,4 +220,14 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     @Query("UPDATE Notification n SET n.status = 'CANCELLED' WHERE n.id = :id AND n.status IN ('PENDING', 'SCHEDULED')")
     void cancelNotification(@Param("id") Long id);
+    
+    // Missing methods for the service implementation
+    List<Notification> findByUserIdAndReadAtIsNull(Long userId);
+    List<Notification> findByUserIdAndAcknowledgedAtIsNull(Long userId);
+    Long countByUserIdAndReadAtIsNull(Long userId);
+    Long countByUserIdAndAcknowledgedAtIsNull(Long userId);
+    List<Notification> findByStatusAndScheduledAtBefore(NotificationStatus status, LocalDateTime dateTime);
+    List<Notification> findByStatusAndNextRetryAtBefore(NotificationStatus status, LocalDateTime dateTime);
+    Long countByUserId(Long userId);
+    List<Notification> findByCreatedAtBefore(LocalDateTime dateTime);
 } 

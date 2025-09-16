@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const NLU_API_BASE_URL = '/api/v1/nlu';
+const NLU_API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/api/v1/nlu';
 
 const nluApi = axios.create({
   baseURL: NLU_API_BASE_URL,

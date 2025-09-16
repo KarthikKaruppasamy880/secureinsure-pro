@@ -20,11 +20,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -85,6 +87,128 @@ public class ClaimServiceImpl implements ClaimService {
         return claims.map(this::convertToDto);
     }
 
+    private RiskLevel calculateRiskLevel(Claim claim) {
+        int riskScore = 0;
+        
+        // Base risk based on claim type
+        switch (claim.getClaimType()) {
+            case AUTO:
+                riskScore += 3;
+                break;
+            case HOME:
+                riskScore += 2;
+                break;
+            case HEALTH:
+                riskScore += 4;
+                break;
+            case LIABILITY:
+                riskScore += 5;
+                break;
+            default:
+                riskScore += 1;
+        }
+        
+        // Adjust based on claim amount
+        if (claim.getEstimatedAmount() != null) {
+            if (claim.getEstimatedAmount().compareTo(new BigDecimal("10000")) > 0) {
+                riskScore += 2;
+            } else if (claim.getEstimatedAmount().compareTo(new BigDecimal("5000")) > 0) {
+                riskScore += 1;
+            }
+        }
+        
+        // Adjust based on customer claim history
+        long claimCount = claimRepository.countByCustomerId(claim.getCustomerId());
+        if (claimCount > 3) {
+            riskScore += 2;
+        } else if (claimCount > 1) {
+            riskScore += 1;
+        }
+        
+        // Determine risk level
+        if (riskScore >= 7) {
+            return RiskLevel.HIGH;
+        } else if (riskScore >= 4) {
+            return RiskLevel.MEDIUM;
+        } else {
+            return RiskLevel.LOW;
+        }
+    }
+    
+    private PriorityLevel calculatePriorityLevel(Claim claim) {
+        if (claim.getRiskLevel() == RiskLevel.HIGH) {
+            return PriorityLevel.HIGH;
+        } else if (claim.getRiskLevel() == RiskLevel.MEDIUM) {
+            return PriorityLevel.MEDIUM;
+        } else {
+            return PriorityLevel.LOW;
+        }
+    }
+    
+    private double calculateFraudScore(Claim claim) {
+        double score = 0.0;
+        
+        // Check for red flags
+        if (claim.getIncidentDate().isAfter(LocalDate.now())) {
+            score += 20.0; // Future incident date
+        }
+        
+        if (claim.getReportedDate().isBefore(claim.getIncidentDate())) {
+            score += 15.0; // Reported before incident
+        }
+        
+        // Check claim amount
+        if (claim.getEstimatedAmount() != null && 
+            claim.getEstimatedAmount().compareTo(new BigDecimal("50000")) > 0) {
+            score += 10.0; // High value claim
+        }
+        
+        // Check for multiple claims in short time
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+        long recentClaims = claimRepository.countByCustomerIdAndIncidentDateAfter(
+            claim.getCustomerId(), thirtyDaysAgo);
+            
+        if (recentClaims > 2) {
+            score += 15.0; // Multiple recent claims
+        }
+        
+        // Check for weekend/holiday claims (higher fraud risk)
+        if (claim.getIncidentDate().getDayOfWeek().getValue() >= 6) {
+            score += 5.0;
+        }
+        
+        // Cap the score at 100
+        return Math.min(score, 100.0);
+    }
+    
+    private boolean validateClaimForSubmission(Claim claim) {
+        if (claim.getCustomerId() == null) {
+            throw new IllegalStateException("Customer ID is required");
+        }
+        
+        if (claim.getPolicyId() == null) {
+            throw new IllegalStateException("Policy ID is required");
+        }
+        
+        if (claim.getClaimType() == null) {
+            throw new IllegalStateException("Claim type is required");
+        }
+        
+        if (claim.getIncidentDate() == null) {
+            throw new IllegalStateException("Incident date is required");
+        }
+        
+        if (claim.getReportedDate() == null) {
+            claim.setReportedDate(LocalDate.now());
+        }
+        
+        if (claim.getDescription() == null || claim.getDescription().trim().isEmpty()) {
+            throw new IllegalStateException("Description is required");
+        }
+        
+        return true;
+    }
+    
     @Override
     public ClaimDto updateClaim(Long id, ClaimDto claimDto) {
         log.info("Updating claim with ID: {}", id);
@@ -532,7 +656,7 @@ public class ClaimServiceImpl implements ClaimService {
         }
         
         Claim claim = claimOpt.get();
-        claim.setFraudScore(fraudScore);
+        claim.setFraudScore(fraudScore.intValue());
         claim.setUpdatedAt(LocalDateTime.now());
         
         Claim savedClaim = claimRepository.save(claim);
@@ -659,7 +783,25 @@ public class ClaimServiceImpl implements ClaimService {
     @Override public Long getProcessingTimeDays(Long claimId) { return 0L; }
     @Override public Long getDaysSinceLastUpdate(Long claimId) { return 0L; }
     @Override public Long getDaysUntilExpiry(Long claimId) { return 0L; }
-    @Override public Double calculateFraudScore(Long claimId) { return 0.0; }
+    @Override 
+    public ClaimDto calculateFraudScore(Long claimId) { 
+        log.info("Calculating fraud score for claim ID: {}", claimId);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            throw new RuntimeException("Claim not found: " + claimId);
+        }
+        
+        Claim claim = claimOpt.get();
+        ClaimDto claimDto = convertToDto(claim);
+        Double fraudScore = calculateFraudScore(claimDto);
+        
+        claim.setFraudScore(fraudScore.intValue());
+        claim.setUpdatedAt(LocalDateTime.now());
+        Claim savedClaim = claimRepository.save(claim);
+        
+        return convertToDto(savedClaim);
+    }
     @Override public BigDecimal calculateApprovedAmount(ClaimDto claimDto) { return BigDecimal.ZERO; }
     
     @Override public List<ClaimDto> getHighRiskFraudClaims(Double minFraudScore) { return new ArrayList<>(); }
@@ -687,7 +829,8 @@ public class ClaimServiceImpl implements ClaimService {
     @Override public void triggerClaimExpiryNotification(Long claimId) { log.info("Notification triggered: Claim expiry {}", claimId); }
     @Override public void triggerClaimUrgentNotification(Long claimId) { log.info("Notification triggered: Urgent claim {}", claimId); }
 
-    private String generateClaimNumber() {
+    @Override
+    public String generateClaimNumber() {
         return "CLM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
@@ -701,7 +844,7 @@ public class ClaimServiceImpl implements ClaimService {
         claim.setPriorityLevel(dto.getPriorityLevel());
         claim.setRiskLevel(dto.getRiskLevel());
         claim.setIncidentDate(dto.getIncidentDate());
-        claim.setReportedDate(dto.getReportedDate());
+        claim.setReportedDate(dto.getReportedDate() != null ? dto.getReportedDate().toLocalDate() : null);
         claim.setIncidentLocation(dto.getIncidentLocation());
         claim.setDescription(dto.getDescription());
         claim.setEstimatedAmount(dto.getEstimatedAmount());
@@ -709,7 +852,7 @@ public class ClaimServiceImpl implements ClaimService {
         claim.setPaidAmount(dto.getPaidAmount());
         claim.setDeductible(dto.getDeductible());
         claim.setCoPay(dto.getCoPay());
-        claim.setFraudScore(dto.getFraudScore());
+        claim.setFraudScore(dto.getFraudScore() != null ? dto.getFraudScore().intValue() : null);
         claim.setAgentId(dto.getAgentId());
         claim.setAdjusterId(dto.getAdjusterId());
         claim.setUnderwriterId(dto.getUnderwriterId());
@@ -730,7 +873,7 @@ public class ClaimServiceImpl implements ClaimService {
                 .priorityLevel(entity.getPriorityLevel())
                 .riskLevel(entity.getRiskLevel())
                 .incidentDate(entity.getIncidentDate())
-                .reportedDate(entity.getReportedDate())
+                .reportedDate(entity.getReportedDate() != null ? entity.getReportedDate().atStartOfDay() : null)
                 .incidentLocation(entity.getIncidentLocation())
                 .description(entity.getDescription())
                 .estimatedAmount(entity.getEstimatedAmount())
@@ -738,7 +881,7 @@ public class ClaimServiceImpl implements ClaimService {
                 .paidAmount(entity.getPaidAmount())
                 .deductible(entity.getDeductible())
                 .coPay(entity.getCoPay())
-                .fraudScore(entity.getFraudScore())
+                .fraudScore(entity.getFraudScore() != null ? entity.getFraudScore().doubleValue() : null)
                 .agentId(entity.getAgentId())
                 .adjusterId(entity.getAdjusterId())
                 .underwriterId(entity.getUnderwriterId())
@@ -771,7 +914,7 @@ public class ClaimServiceImpl implements ClaimService {
         claim.setPaidAmount(dto.getPaidAmount());
         claim.setDeductible(dto.getDeductible());
         claim.setCoPay(dto.getCoPay());
-        claim.setFraudScore(dto.getFraudScore());
+        claim.setFraudScore(dto.getFraudScore() != null ? dto.getFraudScore().intValue() : null);
         claim.setAgentId(dto.getAgentId());
         claim.setAdjusterId(dto.getAdjusterId());
         claim.setUnderwriterId(dto.getUnderwriterId());
@@ -779,5 +922,277 @@ public class ClaimServiceImpl implements ClaimService {
         claim.setApprovalNotes(dto.getApprovalNotes());
         claim.setRejectionNotes(dto.getRejectionNotes());
     }
+    
+    // Missing method implementations to fix compilation errors
+    
+    @Override
+    public RiskLevel calculateRiskLevel(ClaimDto claimDto) {
+        log.info("Calculating risk level for claim: {}", claimDto.getClaimNumber());
+        
+        if (claimDto.getEstimatedAmount() == null) {
+            return RiskLevel.LOW;
+        }
+        
+        BigDecimal amount = claimDto.getEstimatedAmount();
+        if (amount.compareTo(new BigDecimal("100000")) >= 0) {
+            return RiskLevel.HIGH;
+        } else if (amount.compareTo(new BigDecimal("25000")) >= 0) {
+            return RiskLevel.MEDIUM;
+        } else {
+            return RiskLevel.LOW;
+        }
+    }
+    
+    @Override
+    public PriorityLevel calculatePriorityLevel(ClaimDto claimDto) {
+        log.info("Calculating priority level for claim: {}", claimDto.getClaimNumber());
+        
+        // High priority for high-value claims or fraud indicators
+        if (claimDto.getEstimatedAmount() != null && 
+            claimDto.getEstimatedAmount().compareTo(new BigDecimal("50000")) >= 0) {
+            return PriorityLevel.HIGH;
+        }
+        
+        if (claimDto.getFraudScore() != null && claimDto.getFraudScore() > 70.0) {
+            return PriorityLevel.HIGH;
+        }
+        
+        return PriorityLevel.MEDIUM;
+    }
+    
+    @Override
+    public Double calculateFraudScore(ClaimDto claimDto) {
+        log.info("Calculating fraud score for claim: {}", claimDto.getClaimNumber());
+        
+        double score = 0.0;
+        
+        // Simple fraud score calculation based on various factors
+        if (claimDto.getEstimatedAmount() != null) {
+            if (claimDto.getEstimatedAmount().compareTo(new BigDecimal("75000")) >= 0) {
+                score += 30.0;
+            }
+        }
+        
+        if (claimDto.getDescription() != null && 
+            claimDto.getDescription().toLowerCase().contains("total loss")) {
+            score += 20.0;
+        }
+        
+        return Math.min(score, 100.0);
+    }
+    
+    @Override
+    public boolean validateClaimForSubmission(Long claimId) {
+        log.info("Validating claim for submission: {}", claimId);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            return false;
+        }
+        
+        Claim claim = claimOpt.get();
+        return claim.getIncidentDate() != null &&
+               claim.getDescription() != null &&
+               claim.getEstimatedAmount() != null &&
+               claim.getCustomerId() != null &&
+               claim.getPolicyId() != null;
+    }
+    
+    @Override
+    public List<ClaimDto> getUrgentClaims() {
+        log.info("Getting urgent claims");
+        
+        List<Claim> claims = claimRepository.findByPriorityLevel(PriorityLevel.HIGH);
+        return claims.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+    
+    @Override
+    public long countClaimsByRiskLevel(RiskLevel riskLevel) {
+        log.info("Counting claims by risk level: {}", riskLevel);
+        return claimRepository.countByRiskLevel(riskLevel);
+    }
+    
+    @Override
+    public ClaimDto approveClaim(Long claimId, Long approvedBy, String approvalNotes) {
+        log.info("Approving claim: {} by user: {}", claimId, approvedBy);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            throw new RuntimeException("Claim not found: " + claimId);
+        }
+        
+        Claim claim = claimOpt.get();
+        claim.setStatus(ClaimStatus.APPROVED);
+        claim.setApprovalNotes(approvalNotes);
+        claim.setUpdatedAt(LocalDateTime.now());
+
+        
+        Claim savedClaim = claimRepository.save(claim);
+        return convertToDto(savedClaim);
+    }
+    
+    @Override
+    public List<ClaimDto> getClaimsRequiringAction() {
+        log.info("Getting claims requiring action");
+        
+        List<Claim> claims = claimRepository.findByStatusIn(
+            Arrays.asList(ClaimStatus.UNDER_REVIEW, ClaimStatus.PENDING_APPROVAL));
+        return claims.stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+    
+    @Override
+    public ClaimDto reopenClaim(Long claimId, Long reopenedBy) {
+        log.info("Reopening claim: {} by user: {}", claimId, reopenedBy);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            throw new RuntimeException("Claim not found: " + claimId);
+        }
+        
+        Claim claim = claimOpt.get();
+        claim.setStatus(ClaimStatus.UNDER_REVIEW);
+        claim.setUpdatedAt(LocalDateTime.now());
+
+        
+        Claim savedClaim = claimRepository.save(claim);
+        return convertToDto(savedClaim);
+    }
+    
+    @Override
+    public boolean validateClaimForApproval(Long claimId) {
+        log.info("Validating claim for approval: {}", claimId);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            return false;
+        }
+        
+        Claim claim = claimOpt.get();
+        return claim.getStatus() == ClaimStatus.UNDER_REVIEW &&
+               claim.getEstimatedAmount() != null &&
+               claim.getApprovedAmount() != null;
+    }
+    
+    @Override
+    public boolean validateClaim(ClaimDto claimDto) {
+        log.info("Validating claim DTO");
+        
+        return claimDto != null &&
+               claimDto.getCustomerId() != null &&
+               claimDto.getPolicyId() != null &&
+               claimDto.getClaimType() != null &&
+               claimDto.getIncidentDate() != null &&
+               claimDto.getDescription() != null &&
+               claimDto.getEstimatedAmount() != null;
+    }
+    
+    @Override
+    public ClaimDto closeClaim(Long claimId, Long closedBy) {
+        log.info("Closing claim: {} by user: {}", claimId, closedBy);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            throw new RuntimeException("Claim not found: " + claimId);
+        }
+        
+        Claim claim = claimOpt.get();
+        claim.setStatus(ClaimStatus.CLOSED);
+        claim.setUpdatedAt(LocalDateTime.now());
+
+        
+        Claim savedClaim = claimRepository.save(claim);
+        return convertToDto(savedClaim);
+    }
+    
+    @Override
+    public ClaimDto rejectClaim(Long claimId, Long rejectedBy, String rejectionNotes) {
+        log.info("Rejecting claim: {} by user: {}", claimId, rejectedBy);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            throw new RuntimeException("Claim not found: " + claimId);
+        }
+        
+        Claim claim = claimOpt.get();
+        claim.setStatus(ClaimStatus.REJECTED);
+        claim.setRejectionNotes(rejectionNotes);
+        claim.setUpdatedAt(LocalDateTime.now());
+
+        
+        Claim savedClaim = claimRepository.save(claim);
+        return convertToDto(savedClaim);
+    }
+    
+    @Override
+    public boolean validateClaimForPayment(Long claimId) {
+        log.info("Validating claim for payment: {}", claimId);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            return false;
+        }
+        
+        Claim claim = claimOpt.get();
+        return claim.getStatus() == ClaimStatus.APPROVED &&
+               claim.getApprovedAmount() != null &&
+               claim.getApprovedAmount().compareTo(BigDecimal.ZERO) > 0;
+    }
+    
+    @Override
+    public ClaimDto archiveClaim(Long claimId, Long archivedBy) {
+        log.info("Archiving claim: {} by user: {}", claimId, archivedBy);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            throw new RuntimeException("Claim not found: " + claimId);
+        }
+        
+        Claim claim = claimOpt.get();
+        claim.setStatus(ClaimStatus.PENDING_ARCHIVE);
+        claim.setUpdatedAt(LocalDateTime.now());
+
+        
+        Claim savedClaim = claimRepository.save(claim);
+        return convertToDto(savedClaim);
+    }
+    
+    @Override
+    public BigDecimal calculateEstimatedAmount(ClaimDto claimDto) {
+        log.info("Calculating estimated amount for claim");
+        
+        // Simple estimation logic - in real implementation would be more complex
+        if (claimDto.getClaimType() == ClaimType.AUTO_COLLISION) {
+            return new BigDecimal("5000");
+        } else if (claimDto.getClaimType() == ClaimType.HOME) {
+            return new BigDecimal("15000");
+        } else if (claimDto.getClaimType() == ClaimType.HEALTH_MEDICAL) {
+            return new BigDecimal("3000");
+        }
+        
+        return new BigDecimal("2000");
+    }
+    
+    @Override
+    public ClaimDto submitClaim(Long claimId) {
+        log.info("Submitting claim: {}", claimId);
+        
+        Optional<Claim> claimOpt = claimRepository.findById(claimId);
+        if (claimOpt.isEmpty()) {
+            throw new RuntimeException("Claim not found: " + claimId);
+        }
+        
+        Claim claim = claimOpt.get();
+        claim.setStatus(ClaimStatus.SUBMITTED);
+        claim.setUpdatedAt(LocalDateTime.now());
+        
+        Claim savedClaim = claimRepository.save(claim);
+        return convertToDto(savedClaim);
+    }
 }
+
+
+
+
+
+
 

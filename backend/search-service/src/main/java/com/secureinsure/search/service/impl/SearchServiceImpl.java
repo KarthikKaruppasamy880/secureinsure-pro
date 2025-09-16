@@ -815,7 +815,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public String generateIndexId() {
-        return "IDX-" + System.currentTimeMillis() + "-" + generateRandomString(6);
+        return "IDX_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8);
     }
 
     @Override
@@ -866,21 +866,23 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public String getPriorityLabel(Integer priority) {
-        if (priority == null) return "UNKNOWN";
+        if (priority == null) return "Unknown";
         
-        if (priority >= 8) return "HIGH";
-        if (priority >= 4) return "MEDIUM";
-        return "LOW";
+        if (priority >= 8) return "Critical";
+        if (priority >= 6) return "High";
+        if (priority >= 4) return "Medium";
+        if (priority >= 2) return "Low";
+        return "Very Low";
     }
 
     @Override
     public boolean isHighPriority(Integer priority) {
-        return priority != null && priority >= 8;
+        return priority != null && priority >= 6;
     }
 
     @Override
     public boolean isMediumPriority(Integer priority) {
-        return priority != null && priority >= 4 && priority < 8;
+        return priority != null && priority >= 4 && priority < 6;
     }
 
     @Override
@@ -979,11 +981,8 @@ public class SearchServiceImpl implements SearchService {
         return searchIndexRepository.existsByUserId(userId);
     }
 
-    // Helper methods
     private SearchIndex convertToEntity(SearchIndexDto dto) {
         SearchIndex entity = new SearchIndex();
-        entity.setId(dto.getId());
-        entity.setIndexId(dto.getIndexId());
         entity.setEntityType(dto.getEntityType());
         entity.setEntityId(dto.getEntityId());
         entity.setTitle(dto.getTitle());
@@ -996,45 +995,69 @@ public class SearchServiceImpl implements SearchService {
         entity.setSearchScore(dto.getSearchScore());
         entity.setUserId(dto.getUserId());
         entity.setUsername(dto.getUsername());
+        entity.setCreatedBy(dto.getCreatedBy());
+        entity.setUpdatedBy(dto.getUpdatedBy());
+        entity.setMetadata(dto.getMetadata());
         entity.setCreatedAt(dto.getCreatedAt());
         entity.setUpdatedAt(dto.getUpdatedAt());
-        entity.setIndexedAt(dto.getIndexedAt());
-        
+        entity.setLastIndexedAt(dto.getLastIndexedAt());
         return entity;
     }
 
     private SearchIndexDto convertToDto(SearchIndex entity) {
-        return SearchIndexDto.builder()
-                .id(entity.getId())
-                .indexId(entity.getIndexId())
-                .entityType(entity.getEntityType())
-                .entityId(entity.getEntityId())
-                .title(entity.getTitle())
-                .content(entity.getContent())
-                .keywords(entity.getKeywords())
-                .tags(entity.getTags())
-                .category(entity.getCategory())
-                .status(entity.getStatus())
-                .priority(entity.getPriority())
-                .searchScore(entity.getSearchScore())
-                .userId(entity.getUserId())
-                .username(entity.getUsername())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .indexedAt(entity.getIndexedAt())
-                .build();
-    }
+    return SearchIndexDto.builder()
+            .id(entity.getId())
+            .indexId(entity.getIndexId())
+            .entityType(entity.getEntityType())
+            .entityId(entity.getEntityId())
+            .title(entity.getTitle())
+            .content(entity.getContent())
+            .keywords(entity.getKeywords())
+            .tags(entity.getTags())
+            .category(entity.getCategory())
+            .status(entity.getStatus())
+            .priority(entity.getPriority())
+            .searchScore(entity.getSearchScore())
+            .userId(entity.getUserId())
+            .username(entity.getUsername())
+            .createdBy(entity.getCreatedBy())
+            .updatedBy(entity.getUpdatedBy())
+            .metadata(entity.getMetadata())
+            .createdAt(entity.getCreatedAt())
+            .updatedAt(entity.getUpdatedAt())
+            .lastIndexedAt(entity.getLastIndexedAt())
+            .isActive("ACTIVE".equals(entity.getStatus()))
+            .isPending("PENDING".equals(entity.getStatus()))
+            .isDeleted("DELETED".equals(entity.getStatus()))
+            .searchSummary(entity.getContent() != null && entity.getContent().length() > 200 ? 
+                entity.getContent().substring(0, 200) + "..." : entity.getContent())
+            .formattedTags(entity.getTags() != null ? 
+                String.join(", ", entity.getTags().split(",")) : "")
+            .priorityLabel(getPriorityLabel(entity.getPriority()))
+            .hasHighPriority(isHighPriority(entity.getPriority()))
+            .hasMediumPriority(isMediumPriority(entity.getPriority()))
+            .hasLowPriority(isLowPriority(entity.getPriority()))
+            .build();
+}
 
-    private void updateIndexFromDto(SearchIndex entity, SearchIndexDto dto) {
-        if (dto.getTitle() != null) entity.setTitle(dto.getTitle());
-        if (dto.getContent() != null) entity.setContent(dto.getContent());
-        if (dto.getKeywords() != null) entity.setKeywords(dto.getKeywords());
-        if (dto.getTags() != null) entity.setTags(dto.getTags());
-        if (dto.getCategory() != null) entity.setCategory(dto.getCategory());
-        if (dto.getStatus() != null) entity.setStatus(dto.getStatus());
-        if (dto.getPriority() != null) entity.setPriority(dto.getPriority());
-        if (dto.getSearchScore() != null) entity.setSearchScore(dto.getSearchScore());
-        if (dto.getUserId() != null) entity.setUserId(dto.getUserId());
-        if (dto.getUsername() != null) entity.setUsername(dto.getUsername());
-    }
+private void updateIndexFromDto(SearchIndex entity, SearchIndexDto dto) {
+    if (dto.getTitle() != null) entity.setTitle(dto.getTitle());
+    if (dto.getContent() != null) entity.setContent(dto.getContent());
+    if (dto.getKeywords() != null) entity.setKeywords(dto.getKeywords());
+    if (dto.getTags() != null) entity.setTags(dto.getTags());
+    if (dto.getCategory() != null) entity.setCategory(dto.getCategory());
+    if (dto.getStatus() != null) entity.setStatus(dto.getStatus());
+    if (dto.getPriority() != null) entity.setPriority(dto.getPriority());
+    if (dto.getSearchScore() != null) entity.setSearchScore(dto.getSearchScore());
+    if (dto.getUserId() != null) entity.setUserId(dto.getUserId());
+    if (dto.getUsername() != null) entity.setUsername(dto.getUsername());
+    if (dto.getCreatedBy() != null) entity.setCreatedBy(dto.getCreatedBy());
+    if (dto.getUpdatedBy() != null) entity.setUpdatedBy(dto.getUpdatedBy());
+    if (dto.getMetadata() != null) entity.setMetadata(dto.getMetadata());
+    if (dto.getCreatedAt() != null) entity.setCreatedAt(dto.getCreatedAt());
+    if (dto.getUpdatedAt() != null) entity.setUpdatedAt(dto.getUpdatedAt());
+    if (dto.getLastIndexedAt() != null) entity.setLastIndexedAt(dto.getLastIndexedAt());
+}
+
+
 }

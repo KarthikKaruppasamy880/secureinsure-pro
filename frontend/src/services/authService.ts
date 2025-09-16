@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || '/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
 
 // Create axios instance
 const api = axios.create({
@@ -97,21 +97,85 @@ export interface AuthResponse {
   message?: string;
 }
 
+
+
 export const authService = {
-  // Login
+  // Login - Using real API
   async login(username: string, password: string, mfaCode?: string): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/login', {
-      usernameOrEmail: username,
-      password,
-      mfaCode,
-    });
-    return response.data;
+    try {
+      const response = await api.post('/api/v1/auth/login', {
+        username,
+        password,
+        mfaCode
+      });
+      
+      if (response.data.success) {
+        const user = response.data.user;
+        return {
+          accessToken: response.data.token,
+          refreshToken: response.data.token,
+          tokenType: 'Bearer',
+          expiresIn: 3600,
+          userId: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: user.fullName,
+          userType: user.role,
+          roles: [user.role],
+          permissions: user.permissions,
+          mfaEnabled: false,
+          biometricEnabled: false,
+          lastLogin: new Date().toISOString(),
+          message: response.data.message
+        };
+      } else {
+        throw new Error(response.data.message || 'Login failed');
+      }
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Login failed. Please check your credentials.');
+    }
   },
 
-  // Register
+  // Register - Using real API
   async register(userData: RegisterRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/register', userData);
-    return response.data;
+    try {
+      const response = await api.post('/api/v1/auth/register', userData);
+      
+      if (response.data.success) {
+        const user = response.data.user;
+        return {
+          accessToken: 'demo-token-' + Date.now(),
+          refreshToken: 'demo-token-' + Date.now(),
+          tokenType: 'Bearer',
+          expiresIn: 3600,
+          userId: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          fullName: user.fullName || user.username,
+          userType: user.role,
+          roles: [user.role],
+          permissions: ['read', 'write'],
+          mfaEnabled: false,
+          biometricEnabled: false,
+          lastLogin: new Date().toISOString(),
+          message: response.data.message
+        };
+      } else {
+        throw new Error(response.data.message || 'Registration failed');
+      }
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Registration failed. Please try again.');
+    }
   },
 
   // Refresh token
@@ -120,26 +184,57 @@ export const authService = {
     return response.data;
   },
 
-  // Logout
+  // Logout - Using real API
   async logout(): Promise<void> {
     try {
-      await api.post('/auth/logout');
+      await api.post('/api/v1/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      // Clear local storage regardless of API call success
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
   },
 
-  // Get user info
-  async getUserInfo(): Promise<AuthResponse> {
-    const response = await api.get<AuthResponse>('/auth/user');
-    return response.data;
+  // Get user info - Using real API
+  async getUserInfo(): Promise<AuthResponse | null> {
+    try {
+      const response = await api.get('/api/v1/auth/validate');
+      if (response.data.valid) {
+        const user = response.data.user;
+        return {
+          accessToken: localStorage.getItem('token') || '',
+          refreshToken: localStorage.getItem('token') || '',
+          tokenType: 'Bearer',
+          expiresIn: 3600,
+          userId: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          fullName: user.fullName || user.username,
+          userType: user.role,
+          roles: [user.role],
+          permissions: ['read', 'write'],
+          mfaEnabled: false,
+          biometricEnabled: false,
+          lastLogin: new Date().toISOString(),
+          message: 'User info retrieved'
+        };
+      }
+      return null;
+    } catch (error: any) {
+      console.warn('Auth user call failed:', error.message);
+      return null;
+    }
   },
 
-  // Validate token
+  // Validate token - Using real API
   async validateToken(): Promise<boolean> {
     try {
-      const response = await api.get<boolean>('/auth/validate');
-      return response.data;
+      const response = await api.get('/api/v1/auth/validate');
+      return response.data.valid;
     } catch (error) {
       return false;
     }

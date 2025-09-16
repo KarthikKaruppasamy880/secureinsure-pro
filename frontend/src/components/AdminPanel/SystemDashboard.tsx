@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import api from '../../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -94,13 +95,8 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ onRefresh }) => {
   const { data: metrics, isLoading, error, refetch } = useQuery({
     queryKey: ['system-metrics'],
     queryFn: async (): Promise<SystemMetrics> => {
-      const response = await fetch('/api/admin/metrics', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch system metrics');
-      const data = await response.json();
+      const response = await api.get('/api/admin/metrics');
+      const data = response.data;
       return data as SystemMetrics;
     },
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -110,13 +106,8 @@ const SystemDashboard: React.FC<SystemDashboardProps> = ({ onRefresh }) => {
   const { data: alerts } = useQuery({
     queryKey: ['system-alerts'],
     queryFn: async (): Promise<SystemAlert[]> => {
-      const response = await fetch('/api/admin/alerts', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch system alerts');
-      const data = await response.json();
+      const response = await api.get('/api/admin/alerts');
+      const data = response.data;
       return data as SystemAlert[];
     },
     refetchInterval: 60000, // Refresh every minute

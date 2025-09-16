@@ -83,7 +83,7 @@ describe('useUnsavedChanges', () => {
   });
 
   it('shows blocked status when navigation is blocked', () => {
-    mockBlocker.state = 'blocked';
+    (mockBlocker as any).state = 'blocked';
     
     render(
       <BrowserRouter>

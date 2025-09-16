@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -45,6 +46,7 @@ interface DashboardFilters {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [dashboardFilters, setDashboardFilters] = useState<DashboardFilters>({
@@ -285,11 +287,11 @@ export default function Dashboard() {
     switch (action) {
       case 'view':
         toast.success(`Viewing case ${case_.caseNumber}`);
-        // Navigate to case details
+        navigate(`/application/${case_.id}`);
         break;
       case 'edit':
         toast.success(`Editing case ${case_.caseNumber}`);
-        // Navigate to case edit
+        navigate(`/application/${case_.id}?mode=edit`);
         break;
       case 'delete':
         if (confirm(`Are you sure you want to delete case ${case_.caseNumber}?`)) {
@@ -313,36 +315,6 @@ export default function Dashboard() {
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
-  };
-
-  const handleVoiceSearch = (transcript: string) => {
-    setVoiceTranscript(transcript);
-    setSearchQuery(transcript);
-    
-    // Process voice command
-    const command = transcript.toLowerCase();
-    
-    if (command.includes('show active') || command.includes('active cases')) {
-      handleFilterChange('status', 'active');
-      toast.success('Filtered to show active cases');
-    } else if (command.includes('show pending') || command.includes('pending cases')) {
-      handleFilterChange('status', 'pending');
-      toast.success('Filtered to show pending cases');
-    } else if (command.includes('show approved') || command.includes('approved cases')) {
-      handleFilterChange('status', 'approved');
-      toast.success('Filtered to show approved cases');
-    } else if (command.includes('clear filter') || command.includes('clear all')) {
-      clearFilters();
-      toast.success('All filters cleared via voice command');
-    } else if (command.includes('search') && command.includes('john')) {
-      setSearchQuery('John');
-      handleSearch();
-      toast.success('Searching for cases with "John"');
-    } else {
-      // Default search
-      setSearchQuery(transcript);
-      handleSearch();
-    }
   };
 
   return (
@@ -450,7 +422,12 @@ export default function Dashboard() {
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                         <div>
-                          <p className="font-medium">{case_.caseNumber}</p>
+                          <p 
+                            className="font-medium text-blue-600 hover:text-blue-800 cursor-pointer underline"
+                            onClick={() => handleCaseAction('view', case_.id)}
+                          >
+                            {case_.caseNumber}
+                          </p>
                           <p className="text-sm text-gray-600">{case_.insuredName}</p>
                         </div>
                       </div>
@@ -631,7 +608,14 @@ export default function Dashboard() {
                   <tbody>
                     {filteredCases.map((case_) => (
                       <tr key={case_.id} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-medium">{case_.caseNumber}</td>
+                        <td className="p-3 font-medium">
+                          <span 
+                            className="text-blue-600 hover:text-blue-800 cursor-pointer underline"
+                            onClick={() => handleCaseAction('view', case_.id)}
+                          >
+                            {case_.caseNumber}
+                          </span>
+                        </td>
                         <td className="p-3">{case_.insuredName}</td>
                         <td className="p-3">{getStatusBadge(case_.status)}</td>
                         <td className="p-3">{case_.policyType}</td>

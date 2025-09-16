@@ -61,8 +61,14 @@ public class SystemAudit {
     @Column(name = "request_method")
     private String requestMethod;
 
+    @Column(name = "request_params", columnDefinition = "TEXT")
+    private String requestParams;
+
     @Column(name = "response_status")
     private Integer responseStatus;
+
+    @Column(name = "details", columnDefinition = "TEXT")
+    private String details;
 
     @Column(name = "execution_time_ms")
     private Long executionTimeMs;

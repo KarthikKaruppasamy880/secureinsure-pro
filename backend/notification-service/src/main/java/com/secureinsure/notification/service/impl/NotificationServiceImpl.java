@@ -115,106 +115,97 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<NotificationDto> getUnreadNotificationsByUserId(Long userId) {
-        log.info("Getting unread notifications by user ID: {}", userId);
-        
+        log.info("Getting unread notifications for user: {}", userId);
         List<Notification> notifications = notificationRepository.findByUserIdAndReadAtIsNull(userId);
         return notifications.stream().map(this::convertToDto).toList();
     }
 
     @Override
     public List<NotificationDto> getUnacknowledgedNotificationsByUserId(Long userId) {
-        log.info("Getting unacknowledged notifications by user ID: {}", userId);
-        
+        log.info("Getting unacknowledged notifications for user: {}", userId);
         List<Notification> notifications = notificationRepository.findByUserIdAndAcknowledgedAtIsNull(userId);
         return notifications.stream().map(this::convertToDto).toList();
     }
 
     @Override
     public List<NotificationDto> getUrgentNotificationsByUserId(Long userId) {
-        log.info("Getting urgent notifications by user ID: {}", userId);
-        
-        List<Notification> notifications = notificationRepository.findByUserIdAndPriority(userId, PriorityLevel.URGENT);
-        return notifications.stream().map(this::convertToDto).toList();
+        log.info("Getting urgent notifications for user: {}", userId);
+        Page<Notification> notifications = notificationRepository.findByUserId(userId, Pageable.unpaged());
+        return notifications.stream()
+                .filter(n -> PriorityLevel.HIGH.equals(n.getPriority()) || PriorityLevel.URGENT.equals(n.getPriority()))
+                .map(this::convertToDto)
+                .toList();
     }
 
     @Override
     public Long getUnreadNotificationCount(Long userId) {
         log.info("Getting unread notification count for user: {}", userId);
-        
         return notificationRepository.countByUserIdAndReadAtIsNull(userId);
     }
 
     @Override
     public Long getUnacknowledgedNotificationCount(Long userId) {
         log.info("Getting unacknowledged notification count for user: {}", userId);
-        
         return notificationRepository.countByUserIdAndAcknowledgedAtIsNull(userId);
     }
 
-    // Status-based operations
     @Override
     public Page<NotificationDto> getNotificationsByStatus(NotificationStatus status, Pageable pageable) {
-        log.info("Getting notifications by status with pagination: {}", status);
-        
+        log.info("Getting notifications by status: {}", status);
         Page<Notification> notifications = notificationRepository.findByStatus(status, pageable);
         return notifications.map(this::convertToDto);
     }
 
     @Override
     public Page<NotificationDto> getNotificationsByType(NotificationType type, Pageable pageable) {
-        log.info("Getting notifications by type with pagination: {}", type);
-        
+        log.info("Getting notifications by type: {}", type);
         Page<Notification> notifications = notificationRepository.findByType(type, pageable);
         return notifications.map(this::convertToDto);
     }
 
     @Override
     public Page<NotificationDto> getNotificationsByCategory(NotificationCategory category, Pageable pageable) {
-        log.info("Getting notifications by category with pagination: {}", category);
-        
+        log.info("Getting notifications by category: {}", category);
         Page<Notification> notifications = notificationRepository.findByCategory(category, pageable);
         return notifications.map(this::convertToDto);
     }
 
     @Override
     public Page<NotificationDto> getNotificationsByPriority(PriorityLevel priority, Pageable pageable) {
-        log.info("Getting notifications by priority with pagination: {}", priority);
-        
+        log.info("Getting notifications by priority: {}", priority);
         Page<Notification> notifications = notificationRepository.findByPriority(priority, pageable);
         return notifications.map(this::convertToDto);
     }
 
     @Override
     public Page<NotificationDto> getNotificationsByUserIdAndStatus(Long userId, NotificationStatus status, Pageable pageable) {
-        log.info("Getting notifications by user ID and status with pagination: {} - {}", userId, status);
-        
+        log.info("Getting notifications by user ID and status: {} - {}", userId, status);
         Page<Notification> notifications = notificationRepository.findByUserIdAndStatus(userId, status, pageable);
         return notifications.map(this::convertToDto);
     }
 
     @Override
     public Page<NotificationDto> getNotificationsByUserIdAndType(Long userId, NotificationType type, Pageable pageable) {
-        log.info("Getting notifications by user ID and type with pagination: {} - {}", userId, type);
-        
+        log.info("Getting notifications by user ID and type: {} - {}", userId, type);
         Page<Notification> notifications = notificationRepository.findByUserIdAndType(userId, type, pageable);
         return notifications.map(this::convertToDto);
     }
 
     @Override
     public Page<NotificationDto> getNotificationsByUserIdAndCategory(Long userId, NotificationCategory category, Pageable pageable) {
-        log.info("Getting notifications by user ID and category with pagination: {} - {}", userId, category);
-        
+        log.info("Getting notifications by user ID and category: {} - {}", userId, category);
         Page<Notification> notifications = notificationRepository.findByUserIdAndCategory(userId, category, pageable);
         return notifications.map(this::convertToDto);
     }
 
     @Override
     public Page<NotificationDto> getNotificationsByUserIdAndPriority(Long userId, PriorityLevel priority, Pageable pageable) {
-        log.info("Getting notifications by user ID and priority with pagination: {} - {}", userId, priority);
-        
+        log.info("Getting notifications by user ID and priority: {} - {}", userId, priority);
         Page<Notification> notifications = notificationRepository.findByUserIdAndPriority(userId, priority, pageable);
         return notifications.map(this::convertToDto);
     }
+
+
 
     // Search and filter operations
     @Override
@@ -233,7 +224,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     // Delivery operations
     @Override
-    public NotificationDto sendNotification(Long notificationId) {
+    public void sendNotification(Long notificationId) {
         log.info("Sending notification: {}", notificationId);
         
         Notification notification = notificationRepository.findById(notificationId)
@@ -242,12 +233,18 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setStatus(NotificationStatus.SENT);
         notification.setSentAt(LocalDateTime.now());
         
-        Notification savedNotification = notificationRepository.save(notification);
-        return convertToDto(savedNotification);
+        notificationRepository.save(notification);
     }
 
     @Override
-    public List<NotificationDto> sendBatchNotifications(List<NotificationDto> notifications) {
+    public void sendNotificationImmediately(NotificationDto notificationDto) {
+        log.info("Sending notification immediately to user: {}", notificationDto.getUserId());
+        NotificationDto createdNotification = createNotification(notificationDto);
+        sendNotification(createdNotification.getId());
+    }
+
+    @Override
+    public void sendBatchNotifications(List<NotificationDto> notifications) {
         log.info("Sending batch notifications: {} items", notifications.size());
         
         List<NotificationDto> sentNotifications = new ArrayList<>();
@@ -259,12 +256,11 @@ public class NotificationServiceImpl implements NotificationService {
                 log.error("Failed to send notification {}: {}", notificationDto.getId(), e.getMessage());
             }
         }
-        
-        return sentNotifications;
+
     }
 
     @Override
-    public NotificationDto markAsRead(Long notificationId) {
+    public void markAsRead(Long notificationId) {
         log.info("Marking notification as read: {}", notificationId);
         
         Notification notification = notificationRepository.findById(notificationId)
@@ -272,8 +268,7 @@ public class NotificationServiceImpl implements NotificationService {
         
         notification.setReadAt(LocalDateTime.now());
         
-        Notification savedNotification = notificationRepository.save(notification);
-        return convertToDto(savedNotification);
+        notificationRepository.save(notification);
     }
 
     @Override
@@ -289,16 +284,14 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public NotificationDto markAsAcknowledged(Long notificationId) {
+    public void markAsAcknowledged(Long notificationId) {
         log.info("Marking notification as acknowledged: {}", notificationId);
         
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new RuntimeException("Notification not found with ID: " + notificationId));
         
         notification.setAcknowledgedAt(LocalDateTime.now());
-        
-        Notification savedNotification = notificationRepository.save(notification);
-        return convertToDto(savedNotification);
+        notificationRepository.save(notification);
     }
 
     @Override
@@ -762,35 +755,52 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    @Override
+    public void cancelNotification(Long notificationId) {
+        log.info("Cancelling notification: {}", notificationId);
+        Optional<Notification> optionalNotification = notificationRepository.findById(notificationId);
+        if (optionalNotification.isPresent()) {
+            Notification notification = optionalNotification.get();
+            notification.setStatus(NotificationStatus.CANCELLED);
+            notification.setUpdatedAt(LocalDateTime.now());
+            notificationRepository.save(notification);
+        }
+    }
+
     // Validation and health check
     @Override
     public boolean validateNotification(NotificationDto notificationDto) {
         log.info("Validating notification");
         
         if (notificationDto.getUserId() == null) {
-            return false;
+            throw new IllegalArgumentException("User ID is required");
         }
         if (notificationDto.getType() == null) {
-            return false;
+            throw new IllegalArgumentException("Type is required");
         }
         if (notificationDto.getTitle() == null || notificationDto.getTitle().trim().isEmpty()) {
-            return false;
+            throw new IllegalArgumentException("Title is required");
         }
         if (notificationDto.getMessage() == null || notificationDto.getMessage().trim().isEmpty()) {
-            return false;
+            throw new IllegalArgumentException("Message is required");
         }
         
         return true;
     }
 
     @Override
-    public void healthCheck() {
+    public Map<String, Object> healthCheck() {
         log.info("Performing notification service health check");
-        // Implementation would check service health
+        Map<String, Object> health = new HashMap<>();
+        health.put("status", "UP");
+        health.put("service", "notification-service");
+        health.put("timestamp", LocalDateTime.now());
+        return health;
     }
 
     // Helper methods
-    private String generateNotificationId() {
+    @Override
+    public String generateNotificationId() {
         return "NOTIF-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
@@ -886,4 +896,9 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setSourceService(dto.getSourceService());
     }
 }
+
+
+
+
+
 

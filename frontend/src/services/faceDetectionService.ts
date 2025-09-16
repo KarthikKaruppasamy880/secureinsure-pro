@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { assertSecureContext, requestCameraPermission } from '../utils/secureContext';
 
-const FACE_API_BASE_URL = '/face-api';
+const FACE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/face-api';
 
 const faceApi = axios.create({
   baseURL: FACE_API_BASE_URL,
@@ -146,7 +147,11 @@ export const faceDetectionService = {
   // Start camera stream
   async startCamera(): Promise<MediaStream> {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      if (!assertSecureContext()) {
+        throw new Error('Camera access requires a secure context (HTTPS or localhost)');
+      }
+      
+      const stream = await requestCameraPermission({
         video: {
           width: { ideal: 640 },
           height: { ideal: 480 },
@@ -168,6 +173,10 @@ export const faceDetectionService = {
   // Check if camera is available
   async isCameraAvailable(): Promise<boolean> {
     try {
+      if (!assertSecureContext()) {
+        return false;
+      }
+      
       const devices = await navigator.mediaDevices.enumerateDevices();
       return devices.some(device => device.kind === 'videoinput');
     } catch (error) {

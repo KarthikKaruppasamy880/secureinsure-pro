@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -59,9 +60,10 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({
   // Initialize chat session
   const { data: sessionData, isLoading: sessionLoading } = useQuery({
     queryKey: ['chatbot-session'],
-    queryFn: chatbotService.startSession,
+    queryFn: async () => (await chatbotService.startSession()).data,
     retry: 1,
-    enabled: isOpen
+    enabled: isOpen,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Handle text-to-speech
@@ -104,7 +106,8 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({
       }
     },
     onError: (error) => {
-      toast.error('Failed to send message. Please try again.');
+      const errorMessage = chatbotService.handleError(error);
+      toast.error(errorMessage);
       console.error('Chatbot error:', error);
     }
   });
@@ -131,7 +134,8 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({
       }
     },
     onError: (error) => {
-      toast.error('Failed to process voice input.');
+      const errorMessage = chatbotService.handleError(error);
+      toast.error(errorMessage);
       console.error('Voice processing error:', error);
     }
   });
@@ -262,8 +266,8 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({
   if (!isOpen) return null;
 
   if (isMinimized) {
-    return (
-      <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
+    return createPortal(
+      <div className={`fixed bottom-4 right-4 z-[2147483000] ${className}`}>
         <Card className="w-80 shadow-lg">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -313,12 +317,13 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
-    <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
+  return createPortal(
+    <div className={`fixed bottom-4 right-4 z-[2147483000] ${className}`}>
       <Card className="w-96 shadow-lg">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
@@ -542,7 +547,8 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({
           </div>
         </CardContent>
       </Card>
-    </div>
+    </div>,
+    document.body
   );
 };
 

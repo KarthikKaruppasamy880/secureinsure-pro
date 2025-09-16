@@ -105,10 +105,25 @@ const createWrapper = ({ children }: { children: React.ReactNode }) => {
   };
 
   const mockAuthContextValue = {
-    state: mockAuthState,
+    state: {
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        name: 'Test User',
+        roles: ['user']
+      },
+      token: 'mock-token',
+      isAuthenticated: true,
+      isLoading: false
+    },
     login: jest.fn(),
     logout: jest.fn(),
-    register: jest.fn()
+    register: jest.fn(),
+    refreshToken: jest.fn(),
+    updateUser: jest.fn(),
+    clearError: jest.fn(),
+    hasPermission: jest.fn(),
+    hasRole: jest.fn()
   };
 
   return (

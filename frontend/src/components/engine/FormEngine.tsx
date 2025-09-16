@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { createValidationSchema as buildValidationSchema } from './validationSchema';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -20,6 +21,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { InsuranceField, InsuranceFieldConfig } from '../../services/excelToJson';
+import { normalizeField, generateFieldKey, type NormalizedField } from '../../lib/normalizeField';
+
+// Use the imported normalizeField utility
 
 interface FormEngineProps {
   config: InsuranceFieldConfig;
@@ -65,91 +69,8 @@ export const FormEngine: React.FC<FormEngineProps> = ({
     }
   }, [config, initialData]);
 
-  // Create validation schema
-  const createValidationSchema = () => {
-    const schemaFields: Record<string, any> = {};
-    
-    Object.entries(config.sheets).forEach(([sheetName, sheetData]) => {
-      sheetData.fields.forEach(field => {
-        const fieldPath = `${sheetName}.${field.fieldName}`;
-        let fieldSchema: any = z.any();
-
-        // Apply type-specific validation
-        switch (field.type.toLowerCase()) {
-          case 'text':
-            fieldSchema = z.string();
-            if (field.length > 0) {
-              fieldSchema = fieldSchema.max(field.length);
-            }
-            break;
-          case 'number':
-            fieldSchema = z.number().or(z.string().transform(val => parseFloat(val) || 0));
-            break;
-          case 'date':
-            fieldSchema = z.string().refine(val => !isNaN(Date.parse(val)), {
-              message: 'Invalid date format'
-            });
-            break;
-          case 'email':
-            fieldSchema = z.string().email();
-            break;
-          case 'select':
-            fieldSchema = z.string();
-            break;
-          case 'checkbox':
-            fieldSchema = z.boolean().or(z.string().transform(val => val === 'true'));
-            break;
-          default:
-            fieldSchema = z.string();
-        }
-
-        // Apply mandatory validation
-        if (field.mandatory) {
-          fieldSchema = fieldSchema.refine((val: any) => {
-            if (typeof val === 'string') return val.trim().length > 0;
-            if (typeof val === 'boolean') return val;
-            if (typeof val === 'number') return !isNaN(val);
-            return val !== null && val !== undefined;
-          }, {
-            message: `${field.fieldName} is required`
-          });
-        }
-
-        // Apply custom validations
-        if (field.validations && field.validations.length > 0) {
-          fieldSchema = fieldSchema.refine((val: any) => {
-            return field.validations.every(validation => {
-              switch (validation) {
-                case 'unique':
-                  return true; // Would need backend validation
-                case 'not_empty':
-                  return val && String(val).trim().length > 0;
-                case 'max_length':
-                  return !val || String(val).length <= (field.length || 255);
-                case 'age_18_plus':
-                  if (field.type === 'date') {
-                    const birthDate = new Date(val);
-                    const age = new Date().getFullYear() - birthDate.getFullYear();
-                    return age >= 18;
-                  }
-                  return true;
-                default:
-                  return true;
-              }
-            });
-          }, {
-            message: `Validation failed for ${field.fieldName}`
-          });
-        }
-
-        schemaFields[fieldPath] = fieldSchema;
-      });
-    });
-
-    return z.object(schemaFields);
-  };
-
-  const validationSchema = createValidationSchema();
+  // Create validation schema (hardened util)
+  const { schema: validationSchema } = buildValidationSchema({ sheets: config.sheets as any });
   const form = useForm<FormData>({
     resolver: zodResolver(validationSchema),
     defaultValues: formData
@@ -179,10 +100,12 @@ export const FormEngine: React.FC<FormEngineProps> = ({
     }
   };
 
-  const renderField = (field: InsuranceField, sheetName: string) => {
-    const fieldPath = `${sheetName}.${field.fieldName}`;
-    const fieldValue = formData[sheetName]?.[field.fieldName] || '';
-    const isRequired = field.mandatory;
+  const renderField = (field: InsuranceField, sheetName: string, idx: number) => {
+    // Normalize the field to ensure null-safety
+    const normalizedField = normalizeField(field);
+    const fieldPath = `${sheetName}.${normalizedField.fieldName}`;
+    const fieldValue = formData[sheetName]?.[normalizedField.fieldName] || '';
+    const isRequired = normalizedField.mandatory;
 
     const commonProps = {
       id: fieldPath,
@@ -192,8 +115,9 @@ export const FormEngine: React.FC<FormEngineProps> = ({
       'aria-required': isRequired
     };
 
+    const kind = normalizedField.kind;
     const renderFieldInput = () => {
-      switch (field.type.toLowerCase()) {
+      switch (kind) {
         case 'text':
         case 'alphanumeric':
         case 'alpha':
@@ -202,8 +126,8 @@ export const FormEngine: React.FC<FormEngineProps> = ({
               {...commonProps}
               type="text"
               value={fieldValue}
-              onChange={(e) => handleFieldChange(sheetName, field.fieldName, e.target.value)}
-              maxLength={field.length > 0 ? field.length : undefined}
+              onChange={(e) => handleFieldChange(sheetName, normalizedField.fieldName, e.target.value)}
+              maxLength={normalizedField.length && normalizedField.length > 0 ? normalizedField.length : undefined}
             />
           );
 
@@ -213,7 +137,7 @@ export const FormEngine: React.FC<FormEngineProps> = ({
               {...commonProps}
               type="number"
               value={fieldValue}
-              onChange={(e) => handleFieldChange(sheetName, field.fieldName, parseFloat(e.target.value) || 0)}
+              onChange={(e) => handleFieldChange(sheetName, normalizedField.fieldName, parseFloat(e.target.value) || 0)}
             />
           );
 
@@ -223,7 +147,7 @@ export const FormEngine: React.FC<FormEngineProps> = ({
               {...commonProps}
               type="date"
               value={fieldValue}
-              onChange={(e) => handleFieldChange(sheetName, field.fieldName, e.target.value)}
+              onChange={(e) => handleFieldChange(sheetName, normalizedField.fieldName, e.target.value)}
             />
           );
 
@@ -233,7 +157,7 @@ export const FormEngine: React.FC<FormEngineProps> = ({
               {...commonProps}
               type="email"
               value={fieldValue}
-              onChange={(e) => handleFieldChange(sheetName, field.fieldName, e.target.value)}
+              onChange={(e) => handleFieldChange(sheetName, normalizedField.fieldName, e.target.value)}
             />
           );
 
@@ -241,15 +165,15 @@ export const FormEngine: React.FC<FormEngineProps> = ({
           return (
             <Select
               value={fieldValue}
-              onValueChange={(value) => handleFieldChange(sheetName, field.fieldName, value)}
+              onValueChange={(value) => handleFieldChange(sheetName, normalizedField.fieldName, value)}
               disabled={!isEditing}
             >
               <SelectTrigger {...commonProps}>
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
               <SelectContent>
-                {field.validations.includes('in_list') && field.helpText ? (
-                  field.helpText.split(',').map((option, index) => (
+                {normalizedField.validations && Array.isArray(normalizedField.validations) && normalizedField.validations.includes('in_list') && normalizedField.helpText ? (
+                  normalizedField.helpText.split(',').map((option, index) => (
                     <SelectItem key={index} value={option.trim()}>
                       {option.trim()}
                     </SelectItem>
@@ -269,7 +193,7 @@ export const FormEngine: React.FC<FormEngineProps> = ({
             <Checkbox
               id={fieldPath}
               checked={Boolean(fieldValue)}
-              onCheckedChange={(checked) => handleFieldChange(sheetName, field.fieldName, checked)}
+              onCheckedChange={(checked) => handleFieldChange(sheetName, normalizedField.fieldName, checked)}
               disabled={!isEditing}
               aria-describedby={`${fieldPath}-help`}
               aria-required={isRequired}
@@ -281,8 +205,8 @@ export const FormEngine: React.FC<FormEngineProps> = ({
             <Textarea
               {...commonProps}
               value={fieldValue}
-              onChange={(e) => handleFieldChange(sheetName, field.fieldName, e.target.value)}
-              maxLength={field.length > 0 ? field.length : undefined}
+              onChange={(e) => handleFieldChange(sheetName, normalizedField.fieldName, e.target.value)}
+              maxLength={normalizedField.length && normalizedField.length > 0 ? normalizedField.length : undefined}
               rows={3}
             />
           );
@@ -293,31 +217,31 @@ export const FormEngine: React.FC<FormEngineProps> = ({
               {...commonProps}
               type="text"
               value={fieldValue}
-              onChange={(e) => handleFieldChange(sheetName, field.fieldName, e.target.value)}
+              onChange={(e) => handleFieldChange(sheetName, normalizedField.fieldName, e.target.value)}
             />
           );
       }
     };
 
     return (
-      <div key={fieldPath} className="space-y-2">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor={fieldPath} className="text-sm font-medium">
-            {field.fieldName}
+            {normalizedField.fieldName}
             {isRequired && <span className="text-red-500 ml-1">*</span>}
           </Label>
           <div className="flex items-center gap-2">
-            {field.helpText && (
+            {normalizedField.helpText && (
               <div className="group relative">
                 <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
                 <div className="absolute bottom-full right-0 mb-2 w-64 p-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                  {field.helpText}
+                  {normalizedField.helpText}
                 </div>
               </div>
             )}
-            {field.validations.length > 0 && (
+            {normalizedField.validations && Array.isArray(normalizedField.validations) && normalizedField.validations.length > 0 && (
               <Badge variant="secondary" className="text-xs">
-                {field.validations.length} validation{field.validations.length !== 1 ? 's' : ''}
+                {normalizedField.validations.length} validation{normalizedField.validations.length !== 1 ? 's' : ''}
               </Badge>
             )}
           </div>
@@ -327,17 +251,17 @@ export const FormEngine: React.FC<FormEngineProps> = ({
 
         {/* Field metadata */}
         <div className="text-xs text-gray-500 space-y-1">
-          {field.fieldLevel2 && (
-            <div>Category: {field.fieldLevel2}</div>
+          {normalizedField.fieldLevel2 && (
+            <div>Category: {normalizedField.fieldLevel2}</div>
           )}
-          {field.fieldLevel3 && (
-            <div>Subcategory: {field.fieldLevel3}</div>
+          {normalizedField.fieldLevel3 && (
+            <div>Subcategory: {normalizedField.fieldLevel3}</div>
           )}
-          {field.length > 0 && (
-            <div>Max length: {field.length}</div>
+          {normalizedField.length && normalizedField.length > 0 && (
+            <div>Max length: {normalizedField.length}</div>
           )}
-          {field.businessRules.length > 0 && (
-            <div>Business rules: {field.businessRules.join(', ')}</div>
+          {normalizedField.businessRules && Array.isArray(normalizedField.businessRules) && normalizedField.businessRules.length > 0 && (
+            <div>Business rules: {normalizedField.businessRules.join(', ')}</div>
           )}
         </div>
 
@@ -367,7 +291,24 @@ export const FormEngine: React.FC<FormEngineProps> = ({
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {sheetData.fields.map(field => renderField(field, sheetName))}
+            {(sheetData.fields ?? [])
+              .filter(field => {
+                if (!field || typeof field !== 'object') {
+                  console.warn(`Skipping invalid field in ${sheetName}:`, field);
+                  return false;
+                }
+                return true;
+              })
+              .map((field, idx) => {
+                // Generate unique key using the utility function
+                const uniqueKey = generateFieldKey(normalizeField(field), sheetName, idx);
+                
+                return (
+                  <div key={uniqueKey}>
+                    {renderField(field, sheetName, idx)}
+                  </div>
+                );
+              })}
           </div>
         </CardContent>
       </Card>
@@ -453,12 +394,12 @@ export const FormEngine: React.FC<FormEngineProps> = ({
             </div>
             <div>
               <span className="font-medium">Total Fields:</span> {
-                Object.values(config.sheets).reduce((sum, sheet) => sum + sheet.metadata.totalFields, 0)
+                Object.values(config.sheets).reduce((sum, sheet) => sum + (sheet.metadata?.totalFields || 0), 0)
               }
             </div>
             <div>
               <span className="font-medium">Required Fields:</span> {
-                Object.values(config.sheets).reduce((sum, sheet) => sum + sheet.metadata.mandatoryFields, 0)
+                Object.values(config.sheets).reduce((sum, sheet) => sum + (sheet.metadata?.mandatoryFields || 0), 0)
               }
             </div>
           </div>

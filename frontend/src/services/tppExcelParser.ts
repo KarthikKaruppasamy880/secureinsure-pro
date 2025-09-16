@@ -49,7 +49,7 @@ export class TPPExcelParser {
     }
   }
 
-  private parseSheet(sheetName: string, existingFields: InsuranceField[]): InsuranceField[] {
+  public parseSheet(sheetName: string, existingFields: InsuranceField[]): InsuranceField[] {
     if (!this.workbook) {
       throw new Error('Workbook not loaded');
     }
@@ -120,7 +120,7 @@ export class TPPExcelParser {
     return fields;
   }
 
-  private determineFieldType(fieldName: string, section: string): string {
+  public determineFieldType(fieldName: string, section: string): string {
     const lowerFieldName = fieldName.toLowerCase();
     
     if (lowerFieldName.includes('date') || lowerFieldName.includes('dob')) {
@@ -155,7 +155,7 @@ export class TPPExcelParser {
     return 'text'; // default
   }
 
-  private isRequiredField(fieldName: string): boolean {
+  public isRequiredField(fieldName: string): boolean {
     const requiredFields = [
       'Name', 'Date of Birth', 'SSN', 'Email Address', 'Mobile Phone',
       'Street Address 1', 'City', 'State', 'Zip', 'Country'
@@ -163,7 +163,7 @@ export class TPPExcelParser {
     return requiredFields.some(req => fieldName.toLowerCase().includes(req.toLowerCase()));
   }
 
-  private getSubsection(fieldName: string, section: string): string | undefined {
+  public getSubsection(fieldName: string, section: string): string | undefined {
     if (section !== 'Insured') return undefined;
     
     const personalInfo = ['Name', 'Date of Birth', 'Age', 'Gender', 'SSN'];
@@ -191,7 +191,7 @@ export class TPPExcelParser {
     return undefined;
   }
 
-  private extractHelpText(jsonData: any[][], headerRowIndex: number, colIndex: number): string | undefined {
+  public extractHelpText(jsonData: any[][], headerRowIndex: number, colIndex: number): string | undefined {
     // Look for help text in rows below the header
     for (let rowIndex = headerRowIndex + 1; rowIndex < Math.min(headerRowIndex + 5, jsonData.length); rowIndex++) {
       const row = jsonData[rowIndex];
@@ -205,7 +205,7 @@ export class TPPExcelParser {
     return undefined;
   }
 
-  private extractValidation(fieldName: string): string | undefined {
+  public extractValidation(fieldName: string): string | undefined {
     const lowerFieldName = fieldName.toLowerCase();
     
     if (lowerFieldName.includes('email')) {
@@ -227,7 +227,7 @@ export class TPPExcelParser {
     return undefined;
   }
 
-  private extractBusinessRules(jsonData: any[][], headerRowIndex: number, colIndex: number): string | undefined {
+  public extractBusinessRules(jsonData: any[][], headerRowIndex: number, colIndex: number): string | undefined {
     // Look for business rules in rows below the header
     for (let rowIndex = headerRowIndex + 1; rowIndex < Math.min(headerRowIndex + 10, jsonData.length); rowIndex++) {
       const row = jsonData[rowIndex];
