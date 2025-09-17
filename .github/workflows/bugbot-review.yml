@@ -1,28 +1,22 @@
-name: BugBot Review
-
+name: BugBot (Managed by Cursor App)
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
-  pull-requests: write
   contents: read
+  pull-requests: write
+
 jobs:
-  bugbot-review:
+  note-only:
+    name: No-CLI placeholder
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Cursor CLI
+      - name: Explain behavior
         run: |
-          npm i -g @cursorai/cli || echo "Cursor CLI install failed"
-
-      - name: Run BugBot on this PR
-        env:
-          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-        run: cursor review --pr ${{ github.event.pull_request.html_url }}
+          echo "✅ BugBot reviews are handled by the Cursor GitHub App."
+          echo "ℹ️ No CLI is used in CI. Open or update this PR to trigger BugBot comments."
+          echo "   - PR → Conversation tab: summary comment"
+          echo "   - PR → Files changed tab: inline comments"
+      - name: Succeed cleanly
+        run: exit 0
