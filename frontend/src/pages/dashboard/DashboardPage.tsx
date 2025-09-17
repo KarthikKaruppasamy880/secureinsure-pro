@@ -35,7 +35,7 @@ import TX1ImportModal from '../../components/dashboard/TX1ImportModal';
 import CaseRow from '../../screens/Dashboard/CaseRow';
 import { useContext } from 'react';
 import { SocketContext } from '../../contexts/SocketContext';
-import api from '../../lib/api';
+import { api } from '../../lib/api';
 import DiagnosticPanel from '../../components/DiagnosticPanel';
 
 interface DashboardStats {

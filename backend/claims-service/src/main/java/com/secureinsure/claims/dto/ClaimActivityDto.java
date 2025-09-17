@@ -52,13 +52,16 @@ public class ClaimActivityDto {
     private String performedByName;
     
     @Schema(description = "Whether activity is system generated")
+    @Builder.Default
     private Boolean isSystemGenerated = false;
     
     @Schema(description = "Whether activity is visible to customer")
+    @Builder.Default
     private Boolean isCustomerVisible = true;
     
     @Size(max = 20, message = "Priority must not exceed 20 characters")
     @Schema(description = "Activity priority", example = "NORMAL")
+    @Builder.Default
     private String priority = "NORMAL";
     
     @Size(max = 50, message = "Category must not exceed 50 characters")

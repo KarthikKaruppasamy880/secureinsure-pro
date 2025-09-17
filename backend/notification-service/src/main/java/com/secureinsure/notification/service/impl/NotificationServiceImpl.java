@@ -246,12 +246,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendBatchNotifications(List<NotificationDto> notifications) {
         log.info("Sending batch notifications: {} items", notifications.size());
-        
-        List<NotificationDto> sentNotifications = new ArrayList<>();
         for (NotificationDto notificationDto : notifications) {
             try {
-                NotificationDto sent = sendNotification(notificationDto.getId());
-                sentNotifications.add(sent);
+                sendNotification(notificationDto.getId());
             } catch (Exception e) {
                 log.error("Failed to send notification {}: {}", notificationDto.getId(), e.getMessage());
             }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../lib/api';
+import { api } from '../lib/api';
 
 export default function DiagnosticPanel() {
   const [backendStatus, setBackendStatus] = useState<string>('Checking...');

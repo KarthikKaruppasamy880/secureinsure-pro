@@ -17,7 +17,7 @@ export default function ExamOne() {
         console.error('Error fetching ExamOne results:', error);
         // Fallback to sample data if API fails
         setData({
-          status: "Complete",
+          status: "Completed",
           requestId: "EXM-0000000050065799",
           aggregatedRecommendation: {
             recommendedAction: "Refer To Underwriter",

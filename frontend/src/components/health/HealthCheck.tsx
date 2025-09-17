@@ -31,7 +31,7 @@ const HealthCheck: React.FC<HealthCheckProps> = ({ className }) => {
   const checkHealth = async () => {
     setIsChecking(true);
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082';
       
       // Check all health endpoints
       const [healthResponse, readyResponse, versionResponse] = await Promise.allSettled([
@@ -104,7 +104,7 @@ const HealthCheck: React.FC<HealthCheckProps> = ({ className }) => {
     
     // Check CORS compatibility
     const currentOrigin = window.location.origin;
-    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081';
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082';
     
     if (currentOrigin !== 'http://localhost:5173' && currentOrigin !== 'http://localhost:5174') {
       console.warn(`CORS Warning: Frontend origin ${currentOrigin} may not be in backend ALLOWED_ORIGINS`);
@@ -228,7 +228,7 @@ const HealthCheck: React.FC<HealthCheckProps> = ({ className }) => {
           </div>
 
           <div className="text-xs text-gray-500 text-center">
-            Backend URL: {import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081'}
+            Backend URL: {import.meta.env.VITE_API_BASE_URL || 'http://localhost:8082'}
           </div>
         </CardContent>
       </Card>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { api } from '../../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,20 +70,11 @@ const SearchInterface: React.FC<SearchInterfaceProps> = ({ onResultSelect, onAdv
     queryFn: async () => {
       if (!searchQuery.trim()) return [];
       
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          query: searchQuery,
-          filters: activeFilters
-        })
+      const response = await api.post('/api/v1/search', {
+        query: searchQuery,
+        filters: activeFilters
       });
-      
-      if (!response.ok) throw new Error('Search failed');
-      const data = await response.json();
+      const data = response.data;
       return data as SearchResult[];
     },
     enabled: searchQuery.trim().length > 0,
@@ -92,13 +84,8 @@ const SearchInterface: React.FC<SearchInterfaceProps> = ({ onResultSelect, onAdv
   const { data: popularSearches } = useQuery({
     queryKey: ['popular-searches'],
     queryFn: async () => {
-      const response = await fetch('/api/search/popular', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch popular searches');
-      const data = await response.json();
+      const response = await api.get('/api/v1/search/popular');
+      const data = response.data;
       return data as string[];
     }
   });
@@ -367,7 +354,7 @@ const SearchInterface: React.FC<SearchInterfaceProps> = ({ onResultSelect, onAdv
             ) : searchQuery && (
               <div className="text-center py-8">
                 <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No results found for "{searchQuery}"</p>
+                <p className="text-muted-foreground">No results found for &quot;{searchQuery}&quot;</p>
                 <p className="text-sm text-muted-foreground mt-2">
                   Try adjusting your search terms or filters
                 </p>

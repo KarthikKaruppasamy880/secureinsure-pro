@@ -1,0 +1,87 @@
+name: Build, Lint and ZAP
+
+on:
+  pull_request:
+    branches: [ "feat/ExamOne" ]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+
+jobs:
+  build-lint-zap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache Maven repo
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            m2-${{ runner.os }}-
+
+      - name: Backend build (skip tests)
+        run: |
+          cd backend
+          mvn -B -DskipTests clean install
+
+      - name: Frontend install and lint
+        run: |
+          cd frontend
+          npm ci
+          npm run lint
+
+      - name: Install wait-on
+        run: npm i -g wait-on
+
+      - name: Start frontend
+        working-directory: frontend
+        run: |
+          npm run dev &
+          echo $! > ../frontend.pid
+
+      - name: Wait for frontend to be ready
+        run: |
+          wait-on http://localhost:3000
+
+      - name: Run ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.13.0
+        with:
+          docker_name: 'owasp/zap2docker-stable'
+          target: ${{ env.ZAP_TARGET_URL || 'http://localhost:3000' }}
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -m 3 -I -r zap-report.html -l High'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: zap-report.html
+
+      - name: Stop frontend
+        if: always()
+        run: |
+          if [ -f frontend.pid ]; then kill $(cat frontend.pid) || true; fi
+
+

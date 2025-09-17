@@ -324,7 +324,7 @@ export default function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">
-            Welcome back! Here's what's happening with your insurance business.
+            Welcome back! Here&apos;s what&apos;s happening with your insurance business.
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -381,7 +381,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-blue-700">
                   <Mic className="h-4 w-4 inline mr-2" />
-                  Voice Command: "{voiceTranscript}"
+                  Voice Command: &quot;{voiceTranscript}&quot;
                 </span>
                 <Button
                   variant="ghost"
@@ -523,7 +523,7 @@ export default function Dashboard() {
                     <Mic className="h-4 w-4 text-blue-600 animate-pulse" />
                     <span className="text-blue-800 font-medium">Listening... Speak now</span>
                     {voiceTranscript && (
-                      <span className="text-blue-600 ml-2">"{voiceTranscript}"</span>
+                      <span className="text-blue-600 ml-2">&quot;{voiceTranscript}&quot;</span>
                     )}
                   </div>
                 </div>

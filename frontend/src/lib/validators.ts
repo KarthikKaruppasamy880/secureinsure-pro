@@ -129,19 +129,21 @@ export class Validators {
         }
         break;
 
-      case 'min':
+      case 'min': {
         const min = parseInt(params[0]);
         if (Number(value) < min) {
           return `Value must be at least ${min}`;
         }
         break;
+      }
 
-      case 'max':
+      case 'max': {
         const max = parseInt(params[0]);
         if (Number(value) > max) {
           return `Value must be at most ${max}`;
         }
         break;
+      }
 
       case 'regex':
         try {

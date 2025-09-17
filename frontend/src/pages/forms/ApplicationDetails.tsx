@@ -35,7 +35,7 @@ export default function ApplicationDetails() {
       
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:8081/api/v1/cases/${caseId}/application`);
+        const response = await fetch(`http://localhost:8082/api/v1/cases/${caseId}/application`);
         if (!response.ok) throw new Error('Failed to load application');
         const data = await response.json();
         setApplicationData(data);
@@ -68,7 +68,7 @@ export default function ApplicationDetails() {
         toast("No changes");
         return toggleEdit(sectionTitle, false);
       }
-      await fetch(`http://localhost:8081/api/v1/cases/${caseId}/application`, {
+      await fetch(`http://localhost:8082/api/v1/cases/${caseId}/application`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ section: sectionTitle, fields: diff }),

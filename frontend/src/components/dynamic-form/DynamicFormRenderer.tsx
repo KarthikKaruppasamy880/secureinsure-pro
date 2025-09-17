@@ -29,6 +29,14 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
   className
 }) => {
   // Safety check for template
+  const [formValues, setFormValues] = useState<Record<string, any>>(initialValues);
+  const [fieldVisibility, setFieldVisibility] = useState<Record<string, boolean>>({});
+  const [fieldEnabled, setFieldEnabled] = useState<Record<string, boolean>>({});
+  const [fieldRequired, setFieldRequired] = useState<Record<string, boolean>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
+  const [activeTab, setActiveTab] = useState(template?.tabs?.[0]?.key || '');
+
+  // Early return after hooks
   if (!template || !template.fields || !Array.isArray(template.fields)) {
     return (
       <div className="p-4 text-center text-gray-500">
@@ -36,12 +44,6 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
       </div>
     );
   }
-  const [formValues, setFormValues] = useState<Record<string, any>>(initialValues);
-  const [fieldVisibility, setFieldVisibility] = useState<Record<string, boolean>>({});
-  const [fieldEnabled, setFieldEnabled] = useState<Record<string, boolean>>({});
-  const [fieldRequired, setFieldRequired] = useState<Record<string, boolean>>({});
-  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
-  const [activeTab, setActiveTab] = useState(template?.tabs?.[0]?.key || '');
 
   // Initialize field states
   useEffect(() => {
@@ -121,7 +123,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
       setValidationErrors(validationResult.errors);
       onValidationChange?.(validationResult.isValid, validationResult.errors);
     }
-  }, [formValues, fieldVisibility, fieldRequired, template.fields, showValidation, onValidationChange]);
+  }, [formValues, fieldVisibility, fieldRequired, template.fields, showValidation]);
 
   const handleFieldChange = (fieldKey: string, value: any) => {
     setFormValues(prev => ({

@@ -10,7 +10,7 @@ export default function ExamOneOrder(){
   async function placeOrder() {
     setBusy(true);
     try{
-      const r = await fetch("http://localhost:8081/api/v1/examone/lab-request", { 
+      const r = await fetch("http://localhost:8082/api/v1/examone/lab-request", { 
         method:"POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ caseId: "current-case" })

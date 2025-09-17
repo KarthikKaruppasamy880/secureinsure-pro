@@ -8,7 +8,8 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard" element={<DashboardPage />} />
-      {/* accept both /cases/:id and legacy /case/:id */}
+      {/* accept /application/:id, /cases/:id and legacy /case/:id */}
+      <Route path="/application/:caseId" element={<ApplicationDetails />} />
       <Route path="/cases/:caseId" element={<ApplicationDetails />} />
       <Route path="/case/:caseId" element={<ApplicationDetails />} />
       <Route path="/cases/:caseId/examone" element={<ExamOneResults />} />

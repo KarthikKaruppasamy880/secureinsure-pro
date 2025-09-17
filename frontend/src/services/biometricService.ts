@@ -194,26 +194,29 @@ class BiometricService {
       let metadata: any;
 
       switch (method) {
-        case 'fingerprint':
+        case 'fingerprint': {
           const fingerprintResult = await this.enrollFingerprint(userId, enrollmentData);
           data = fingerprintResult.credentialId;
           metadata = { type: 'public-key', transports: ['internal'] };
           localStorage.setItem('biometric_fingerprint_enrolled', 'true');
           break;
+        }
 
-        case 'face':
+        case 'face': {
           const faceResult = await this.enrollFace(userId, enrollmentData);
           data = faceResult.templateId;
           metadata = { landmarks: faceResult.landmarks, quality: faceResult.quality };
           localStorage.setItem('biometric_face_enrolled', 'true');
           break;
+        }
 
-        case 'voice':
+        case 'voice': {
           const voiceResult = await this.enrollVoice(userId, enrollmentData);
           data = voiceResult.voiceId;
           metadata = { language: voiceResult.language, sampleRate: voiceResult.sampleRate };
           localStorage.setItem('biometric_voice_enrolled', 'true');
           break;
+        }
 
         default:
           throw new Error(`Unsupported biometric method: ${method}`);

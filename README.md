@@ -160,6 +160,26 @@ Navigate to **Admin Panel → Testing** to run comprehensive end-to-end tests:
 
 ## 🔧 Development
 
+### Local backend + frontend (Java + React)
+
+1) Backend (Java services)
+
+```
+cd backend
+mvn clean install -DskipTests
+mvn spring-boot:run
+```
+
+2) Frontend (React)
+
+```
+cd frontend
+npm ci
+npm run dev
+```
+
+Open http://localhost:3000
+
 ### Project Structure
 ```
 secureinsure-pro/
@@ -199,6 +219,21 @@ npm run build         # Build for production
 npm run lint          # Run ESLint
 npm run preview       # Preview production build
 ```
+
+### Lint/build quick checks
+
+```
+# Backend (package notification-service and its deps)
+mvn -pl backend/notification-service -am -DskipTests clean package
+
+# Frontend (ESLint v9 + flat config)
+npm --prefix frontend ci
+npm --prefix frontend run lint
+```
+
+### OWASP ZAP in CI
+
+CI launches the frontend, waits for http://localhost:3000, then runs ZAP Baseline and uploads `zap-report.html`. It fails only on High risk alerts. To target an external env, set `ZAP_TARGET_URL` at job or repo level.
 
 ## 🐛 Troubleshooting
 

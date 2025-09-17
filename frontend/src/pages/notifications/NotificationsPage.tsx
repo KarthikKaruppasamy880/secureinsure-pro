@@ -242,9 +242,10 @@ const NotificationsPage: React.FC = () => {
     // Sort
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'priority':
+        case 'priority': {
           const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
           return priorityOrder[b.priority] - priorityOrder[a.priority];
+        }
         case 'type':
           return a.type.localeCompare(b.type);
         case 'timestamp':
@@ -778,6 +779,7 @@ const NotificationsPage: React.FC = () => {
 };
 
 export default NotificationsPage;
+
 
 
 

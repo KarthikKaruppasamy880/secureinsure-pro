@@ -73,7 +73,7 @@ export function normalizeField(input: any): NormalizedField | null {
     };
   } catch (err) {
     if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
+       
       console.warn('normalizeField failed for input:', input, err);
     }
     return null;
@@ -182,7 +182,7 @@ function applyAdditionalValidations(schema: z.ZodTypeAny, field: NormalizedField
         current = (current as any).regex(re);
       } catch (e) {
         if (process.env.NODE_ENV !== 'production') {
-          // eslint-disable-next-line no-console
+           
           console.warn('Invalid regex validation:', rule, e);
         }
       }
@@ -228,7 +228,7 @@ export function createValidationSchema(config: NormalizedConfig): { schema: z.Zo
       const field = normalizeField(rawField);
       if (!field) {
         if (process.env.NODE_ENV !== 'production') {
-          // eslint-disable-next-line no-console
+           
           console.warn('Skipping invalid field in sheet:', sheetName, rawField);
         }
         errors.push(`Invalid field skipped in '${sheetName}'`);
@@ -244,6 +244,7 @@ export function createValidationSchema(config: NormalizedConfig): { schema: z.Zo
 
   return { schema: z.object(schemaFields), errors };
 }
+
 
 
 

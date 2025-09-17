@@ -230,7 +230,6 @@ public class ServerRuntimeLogger {
     
     private void monitorErrorRates() {
         try {
-            long currentTime = System.currentTimeMillis();
             long totalRequestsCount = totalRequests.get();
             long totalErrorsCount = totalErrors.get();
             long totalWarningsCount = totalWarnings.get();

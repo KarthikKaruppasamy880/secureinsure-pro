@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { api } from '../../services/api';
+import { api } from '../../lib/api';
 import { Button } from '../../components/ui/button';
+import LabPiQPopup from '../../components/examone/LabPiQPopup';
 
 type Section = { fields: Record<string, any> };
 type AppData = { caseId: string; sections: Record<string, Section> };
@@ -48,19 +49,27 @@ export default function ApplicationDetails() {
     }
   }
 
+  const sections = useMemo(() => Object.entries(data?.sections || {}), [data?.sections]);
+
   if (loading) return <div className="p-4">Loading…</div>;
   if (err) return <div className="p-4 text-red-600">Error: {err}</div>;
-
-  const sections = useMemo(() => Object.entries(data.sections || {}), [data.sections]);
   return (
     <div className="p-4">
       <div className="mb-3 flex items-center gap-3">
         <Link to="/dashboard" className="text-blue-600 underline">← Back</Link>
         <h1 className="text-xl font-semibold" data-testid="app-details-title">Application Details</h1>
         <span className="text-sm text-gray-500" data-testid="app-details-caseid">Case: {data.caseId}</span>
-        <Button onClick={orderLab} className="ml-auto bg-blue-600 text-white">
-          Order Lab
-        </Button>
+        <div className="ml-auto flex gap-2">
+          <LabPiQPopup 
+            caseId={data.caseId}
+            insuredInfo={data.sections?.insured?.fields || {}}
+            policyInfo={data.sections?.policy?.fields || {}}
+            onOrderComplete={(orderId) => console.log('Lab PiQ order completed:', orderId)}
+          />
+          <Button onClick={orderLab} className="bg-blue-600 text-white">
+            Order Lab
+          </Button>
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {sections.map(([name, s]) => (

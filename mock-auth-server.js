@@ -9,7 +9,7 @@ const http = require('http');
 const WebSocket = require('ws');
 
 const app = express();
-const PORT = 8081;
+const PORT = 8082;
 const JWT_SECRET = 'mock_secret_key_for_testing';
 
 // CORS configuration with environment variable support
@@ -881,6 +881,202 @@ app.get('/api/v1/examone/results', (req, res) => {
     }
 });
 
+// ExamOne Lab PiQ Order endpoint - Real API Integration
+app.post('/api/v1/vendor/examone/labpiq/order', async (req, res) => {
+    try {
+        const { caseId, insuredInfo, policyInfo } = req.body;
+        
+        if (!caseId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Case ID is required'
+            });
+        }
+        
+        console.log('Lab PiQ Order Request:', { caseId, insuredInfo, policyInfo });
+        
+        // Real ExamOne API call
+        const examOneUrl = 'https://qcs-uat.questdiagnostics.com/services/eoservice.asmx';
+        
+        // Create ACORD XML request
+        const orderId = `ACORD-${Date.now()}`;
+        const acordXml = `<?xml version="1.0" encoding="UTF-8"?>
+<ACORD>
+  <InsuranceSvcRq>
+    <RqUID>${orderId}</RqUID>
+    <TransactionRequestDt>${new Date().toISOString()}</TransactionRequestDt>
+    <MsgRqHdr>
+      <OrgRef>
+        <OrgId>SecureInsure</OrgId>
+      </OrgRef>
+    </MsgRqHdr>
+    <InsuranceSvcRq>
+      <LifeRq>
+        <InsuredOrPrincipal>
+          <PersonName>
+            <GivenName>${insuredInfo?.name?.split(' ')[0] || 'John'}</GivenName>
+            <Surname>${insuredInfo?.name?.split(' ')[1] || 'Doe'}</Surname>
+          </PersonName>
+          <SSN>${insuredInfo?.ssn || '000-00-0000'}</SSN>
+        </InsuredOrPrincipal>
+        <Policy>
+          <PolicyNumber>${policyInfo?.number || 'POL-001'}</PolicyNumber>
+          <FaceAmount>${policyInfo?.amount || 500000}</FaceAmount>
+        </Policy>
+        <LabPiQRequest>
+          <CaseId>${caseId}</CaseId>
+          <RequestType>NEW</RequestType>
+        </LabPiQRequest>
+      </LifeRq>
+    </InsuranceSvcRq>
+  </InsuranceSvcRq>
+</ACORD>`;
+
+        try {
+            // Make real API call to ExamOne with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
+            const response = await fetch(examOneUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/xml; charset=utf-8',
+                    'SOAPAction': 'http://tempuri.org/ProcessLabPiQ',
+                    'User-Agent': 'SecureInsure-Pro/1.0'
+                },
+                body: `<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <ProcessLabPiQ xmlns="http://tempuri.org/">
+      <xmlRequest>${acordXml}</xmlRequest>
+    </ProcessLabPiQ>
+  </soap:Body>
+</soap:Envelope>`,
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`ExamOne API error: ${response.status} ${response.statusText}`);
+            }
+
+            const responseText = await response.text();
+            console.log('ExamOne API Response:', responseText);
+
+            const order = {
+                orderId,
+                caseId,
+                status: 'submitted',
+                submittedAt: new Date().toISOString(),
+                insuredInfo: insuredInfo || {},
+                policyInfo: policyInfo || {},
+                acordXml: acordXml,
+                examOneResponse: responseText,
+                apiStatus: 'success'
+            };
+            
+            res.json({
+                success: true,
+                data: order
+            });
+            
+        } catch (apiError) {
+            console.error('ExamOne API Error:', apiError.message);
+            
+            // Always fallback to mock response for now
+            const order = {
+                orderId,
+                caseId,
+                status: 'submitted',
+                submittedAt: new Date().toISOString(),
+                insuredInfo: insuredInfo || {},
+                policyInfo: policyInfo || {},
+                acordXml: acordXml,
+                apiStatus: 'mock',
+                error: `Real API failed: ${apiError.message}`
+            };
+            
+            res.json({
+                success: true,
+                data: order
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error creating Lab PiQ order:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create Lab PiQ order'
+        });
+    }
+});
+
+// ExamOne Lab PiQ Results endpoint
+app.get('/api/v1/vendor/examone/labpiq/results', (req, res) => {
+    try {
+        const { caseId } = req.query;
+        
+        if (!caseId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Case ID is required'
+            });
+        }
+        
+        // Mock results response
+        const results = {
+            caseId,
+            orderId: `ACORD-${Date.now()}`,
+            status: 'completed',
+            completedAt: new Date().toISOString(),
+            summary: {
+                overallScore: 85,
+                riskLevel: 'Low',
+                recommendations: ['Continue current coverage', 'Annual review recommended']
+            },
+            observations: [
+                {
+                    category: 'Medical History',
+                    score: 90,
+                    details: 'Clean medical history with no significant findings'
+                },
+                {
+                    category: 'Lifestyle Factors',
+                    score: 80,
+                    details: 'Non-smoker, regular exercise routine'
+                }
+            ],
+            scores: {
+                medical: 90,
+                lifestyle: 80,
+                financial: 85,
+                overall: 85
+            },
+            flags: [],
+            rawData: {
+                xmlResponse: '<?xml version="1.0" encoding="UTF-8"?><ACORD>...</ACORD>',
+                jsonData: {
+                    orderId: `ACORD-${Date.now()}`,
+                    status: 'HIT',
+                    results: 'Available'
+                }
+            }
+        };
+        
+        res.json({
+            success: true,
+            results: [results]
+        });
+    } catch (error) {
+        console.error('Error fetching Lab PiQ results:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch Lab PiQ results'
+        });
+    }
+});
+
 // Create HTTP server for WebSocket support
 const server = http.createServer(app);
 
@@ -952,6 +1148,8 @@ server.listen(PORT, () => {
     console.log(`   POST /api/v1/tx1/import - Import TX1 XML`);
     console.log(`   POST /api/v1/examone/lab-request - ExamOne lab request`);
     console.log(`   GET  /api/v1/examone/results - ExamOne results`);
+    console.log(`   POST /api/v1/vendor/examone/labpiq/order - Lab PiQ order`);
+    console.log(`   GET  /api/v1/vendor/examone/labpiq/results - Lab PiQ results`);
     console.log('\n👥 Pre-loaded users:');
     console.log('   Username: admin, Password: admin123 (ADMIN)');
     console.log('\n🌐 CORS enabled for:');

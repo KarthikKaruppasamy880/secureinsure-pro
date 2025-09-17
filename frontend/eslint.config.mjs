@@ -18,7 +18,6 @@ export default [
         },
       },
       globals: {
-        // Browser globals
         window: 'readonly',
         document: 'readonly',
         navigator: 'readonly',
@@ -43,7 +42,9 @@ export default [
         clearInterval: 'readonly',
         Event: 'readonly',
         EventTarget: 'readonly',
-        // DOM globals
+        location: 'readonly',
+        DOMParser: 'readonly',
+        BeforeUnloadEvent: 'readonly',
         HTMLInputElement: 'readonly',
         HTMLTextAreaElement: 'readonly',
         HTMLCanvasElement: 'readonly',
@@ -65,12 +66,10 @@ export default [
         RequestInit: 'readonly',
         confirm: 'readonly',
         alert: 'readonly',
-        // Node.js globals
         process: 'readonly',
         NodeJS: 'readonly',
         global: 'readonly',
         require: 'readonly',
-        // Test globals
         describe: 'readonly',
         it: 'readonly',
         test: 'readonly',
@@ -110,3 +109,5 @@ export default [
     ignores: ['dist/**', 'node_modules/**', 'coverage/**', 'test-results/**', 'e2e/**'],
   },
 ];
+
+

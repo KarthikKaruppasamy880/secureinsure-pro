@@ -13,14 +13,14 @@ export default function LabOrderPopup() {
     setError(null);
     try {
       // 1) place order (POST TXLife)
-      const order = await fetch(`http://localhost:8081/api/lab/orders`, {
+      const order = await fetch(`http://localhost:8082/api/lab/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ caseId }),
       }).then(r => r.json());
 
       // 2) poll result (simplified)
-      const res = await fetch(`http://localhost:8081/api/lab/orders/${order.id}`).then(r => r.json());
+      const res = await fetch(`http://localhost:8082/api/lab/orders/${order.id}`).then(r => r.json());
       setResult(res);
     } catch (e: any) {
       setError(e?.message || "Order failed");

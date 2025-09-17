@@ -20,44 +20,44 @@ public class AuthController {
         if ("admin".equals(username) && "admin123".equals(password)) {
             response.put("success", true);
             response.put("token", "demo-token-" + System.currentTimeMillis());
-            response.put("user", Map.of(
-                "id", 1L,
-                "username", username,
-                "email", "admin@secureinsure.com",
-                "role", "ADMIN",
-                "firstName", "Admin",
-                "lastName", "User",
-                "fullName", "Admin User",
-                "permissions", new String[]{"read", "write", "delete", "admin"}
-            ));
+            Map<String, Object> user = new HashMap<>();
+            user.put("id", 1L);
+            user.put("username", username);
+            user.put("email", "admin@secureinsure.com");
+            user.put("role", "ADMIN");
+            user.put("firstName", "Admin");
+            user.put("lastName", "User");
+            user.put("fullName", "Admin User");
+            user.put("permissions", new String[]{"read", "write", "delete", "admin"});
+            response.put("user", user);
             response.put("message", "Login successful");
         } else if ("user".equals(username) && "user123".equals(password)) {
             response.put("success", true);
             response.put("token", "demo-token-" + System.currentTimeMillis());
-            response.put("user", Map.of(
-                "id", 2L,
-                "username", username,
-                "email", "user@secureinsure.com",
-                "role", "USER",
-                "firstName", "Regular",
-                "lastName", "User",
-                "fullName", "Regular User",
-                "permissions", new String[]{"read", "write"}
-            ));
+            Map<String, Object> user2 = new HashMap<>();
+            user2.put("id", 2L);
+            user2.put("username", username);
+            user2.put("email", "user@secureinsure.com");
+            user2.put("role", "USER");
+            user2.put("firstName", "Regular");
+            user2.put("lastName", "User");
+            user2.put("fullName", "Regular User");
+            user2.put("permissions", new String[]{"read", "write"});
+            response.put("user", user2);
             response.put("message", "Login successful");
         } else if ("agent".equals(username) && "agent123".equals(password)) {
             response.put("success", true);
             response.put("token", "demo-token-" + System.currentTimeMillis());
-            response.put("user", Map.of(
-                "id", 3L,
-                "username", username,
-                "email", "agent@secureinsure.com",
-                "role", "AGENT",
-                "firstName", "Insurance",
-                "lastName", "Agent",
-                "fullName", "Insurance Agent",
-                "permissions", new String[]{"read", "write", "claims"}
-            ));
+            Map<String, Object> user3 = new HashMap<>();
+            user3.put("id", 3L);
+            user3.put("username", username);
+            user3.put("email", "agent@secureinsure.com");
+            user3.put("role", "AGENT");
+            user3.put("firstName", "Insurance");
+            user3.put("lastName", "Agent");
+            user3.put("fullName", "Insurance Agent");
+            user3.put("permissions", new String[]{"read", "write", "claims"});
+            response.put("user", user3);
             response.put("message", "Login successful");
         } else {
             response.put("success", false);

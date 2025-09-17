@@ -48,6 +48,7 @@ export default function App(){
             
             {/* Case Routes */}
             <Route path="cases/:caseId" element={flags.appdetV2 ? <ApplicationDetailsV2 /> : <ApplicationDetailsLegacy />} />
+            <Route path="application/:caseId" element={flags.appdetV2 ? <ApplicationDetailsV2 /> : <ApplicationDetailsLegacy />} />
             <Route path="cases/:caseId/examone" element={<ExamOneResultsPage />} />
             {/* Legacy route support */}
             <Route path="case/:caseId" element={flags.appdetV2 ? <ApplicationDetailsV2 /> : <ApplicationDetailsLegacy />} />

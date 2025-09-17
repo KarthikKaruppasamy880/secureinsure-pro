@@ -106,7 +106,7 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({
           
           voiceWebSocketService.on('nlu_intent', (data) => {
             if (import.meta.env.DEV) {
-              // eslint-disable-next-line no-console
+               
               console.debug('[VOICE]', { transcript, intent: data.intent, entities: data.data });
             }
             // Handle different intents
@@ -115,7 +115,7 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({
           
           voiceWebSocketService.on('tool_result', (data) => {
             if (import.meta.env.DEV) {
-              // eslint-disable-next-line no-console
+               
               console.debug('[VOICE tool]', data);
             }
             // Handle tool results (API responses)
@@ -503,7 +503,7 @@ export const VoiceSearch: React.FC<VoiceSearchProps> = ({
     }
 
     if (import.meta.env.DEV) {
-      // eslint-disable-next-line no-console
+       
       console.debug('[VOICE]', { transcript: command, intent: 'parsed', entities: filters });
     }
 

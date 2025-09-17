@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 import { DynamicFormRenderer } from '../../components/dynamic-form/DynamicFormRenderer';
 import { ExcelParserService, Template } from '../../services/excelParserService';
 import { useNavigate } from 'react-router-dom';
-import api from '../../lib/api';
+import { api } from '../../lib/api';
 
 const CreateCasePage: React.FC = () => {
   const [template, setTemplate] = useState<Template | null>(null);
