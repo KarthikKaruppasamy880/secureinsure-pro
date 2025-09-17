@@ -541,7 +541,7 @@ const AssistantPanel: React.FC<AssistantPanelProps> = ({
               
               <div className="flex items-center gap-1">
                 <HelpCircle className="h-3 w-3" />
-                <span>Try: "Check my policy" or "File a claim"</span>
+                <span>Try: &quot;Check my policy&quot; or &quot;File a claim&quot;</span>
               </div>
             </div>
           </div>

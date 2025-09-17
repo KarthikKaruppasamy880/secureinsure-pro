@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Badge } from '../ui/badge';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { DynamicField } from './DynamicField';
 import { SectionContainer } from './CollapsibleSection';
 import { NormalizedField, Template } from '../../services/excelParserService';
@@ -11,8 +11,8 @@ import { toast } from 'react-hot-toast';
 
 interface DynamicFormRendererProps {
   template: Template;
-  initialValues?: Record<string, any>;
-  onSubmit?: (values: Record<string, any>) => void;
+  initialValues?: Record<string, unknown>;
+  onSubmit?: (values: Record<string, unknown>) => void;
   onValidationChange?: (isValid: boolean, errors: Record<string, string[]>) => void;
   disabled?: boolean;
   showValidation?: boolean;
@@ -28,22 +28,13 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
   showValidation = true,
   className
 }) => {
-  // Safety check for template
-  const [formValues, setFormValues] = useState<Record<string, any>>(initialValues);
+  // All hooks must be called before any early returns
+  const [formValues, setFormValues] = useState<Record<string, unknown>>(initialValues);
   const [fieldVisibility, setFieldVisibility] = useState<Record<string, boolean>>({});
   const [fieldEnabled, setFieldEnabled] = useState<Record<string, boolean>>({});
   const [fieldRequired, setFieldRequired] = useState<Record<string, boolean>>({});
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
   const [activeTab, setActiveTab] = useState(template?.tabs?.[0]?.key || '');
-
-  // Early return after hooks
-  if (!template || !template.fields || !Array.isArray(template.fields)) {
-    return (
-      <div className="p-4 text-center text-gray-500">
-        <p>No template available or template structure is invalid.</p>
-      </div>
-    );
-  }
 
   // Initialize field states
   useEffect(() => {
@@ -97,7 +88,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
         setFormValues(updatedStates.formState);
       }
     }
-  }, [formValues, template.fields]);
+  }, [formValues, template.fields, fieldEnabled, fieldRequired, fieldVisibility]);
 
   // Validate form when values change
   useEffect(() => {
@@ -123,9 +114,9 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
       setValidationErrors(validationResult.errors);
       onValidationChange?.(validationResult.isValid, validationResult.errors);
     }
-  }, [formValues, fieldVisibility, fieldRequired, template.fields, showValidation]);
+  }, [formValues, fieldVisibility, fieldRequired, template.fields, showValidation, onValidationChange]);
 
-  const handleFieldChange = (fieldKey: string, value: any) => {
+  const handleFieldChange = (fieldKey: string, value: unknown) => {
     setFormValues(prev => ({
       ...prev,
       [fieldKey]: value
@@ -179,11 +170,18 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
     return organized;
   }, [template]);
 
+  // Early return after all hooks
+  if (!template || !template.fields || !Array.isArray(template.fields)) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        <p>No template available or template structure is invalid.</p>
+      </div>
+    );
+  }
+
   // Render fields for a specific hierarchy level
   const renderFieldsForLevel = (
-    fields: NormalizedField[],
-    level: number,
-    parentKey: string
+    fields: NormalizedField[]
   ): React.ReactNode[] => {
     if (!Array.isArray(fields)) {
       return [];
@@ -207,7 +205,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
   // Render sections recursively
   const renderSections = (
     tabKey: string,
-    sections: Record<string, any>,
+    sections: Record<string, unknown>,
     level: number
   ): React.ReactNode[] => {
     if (!sections || typeof sections !== 'object') {
@@ -215,7 +213,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
     }
     
     return Object.entries(sections)
-      .filter(([_, sectionData]) => {
+      .filter(([, sectionData]) => {
         if (level === 1) return true;
         if (level === 2) return Object.keys(sectionData || {}).some(key => 
           typeof sectionData[key] === 'object' && !Array.isArray(sectionData[key])
@@ -238,7 +236,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
               key={`${tabKey}-${sectionName}`}
               title={sectionName || 'General Fields'}
               level={level}
-              fields={renderFieldsForLevel(fields, level, sectionName)}
+              fields={renderFieldsForLevel(fields)}
               errorCount={errorCount}
             />
           );

@@ -156,7 +156,7 @@ describe('ErrorHandler', () => {
 
   describe('handleNetworkError', () => {
     it('handles network error when online', () => {
-      (navigator as any).onLine = true;
+      (navigator as { onLine: boolean }).onLine = true;
       const error = new Error('Network error');
 
       errorHandler.handleNetworkError(error, 'API call');
@@ -166,7 +166,7 @@ describe('ErrorHandler', () => {
     });
 
     it('handles network error when offline', () => {
-      (navigator as any).onLine = false;
+      (navigator as { onLine: boolean }).onLine = false;
       const error = new Error('Network error');
 
       errorHandler.handleNetworkError(error, 'API call');
