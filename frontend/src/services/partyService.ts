@@ -58,7 +58,7 @@ export interface RoleAssignment {
   startDate: string;
   endDate?: string;
   isActive: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -107,7 +107,7 @@ export interface CreateRoleAssignmentRequest {
   percentage?: number;
   startDate: string;
   endDate?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateRoleAssignmentRequest extends Partial<CreateRoleAssignmentRequest> {
@@ -141,42 +141,22 @@ export interface CasePartySummary {
 export const partyService = {
   // Party Management
   async createParty(partyData: CreatePartyRequest): Promise<Party> {
-    try {
-      const response = await api.post('/parties', partyData);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating party:', error);
-      throw error;
-    }
+    const response = await api.post('/parties', partyData);
+    return response.data;
   },
 
   async getPartyById(partyId: string): Promise<Party> {
-    try {
-      const response = await api.get(`/parties/${partyId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching party:', error);
-      throw error;
-    }
+    const response = await api.get(`/parties/${partyId}`);
+    return response.data;
   },
 
   async updateParty(partyData: UpdatePartyRequest): Promise<Party> {
-    try {
-      const response = await api.put(`/parties/${partyData.id}`, partyData);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating party:', error);
-      throw error;
-    }
+    const response = await api.put(`/parties/${partyData.id}`, partyData);
+    return response.data;
   },
 
   async deleteParty(partyId: string): Promise<void> {
-    try {
-      await api.delete(`/parties/${partyId}`);
-    } catch (error) {
-      console.error('Error deleting party:', error);
-      throw error;
-    }
+    await api.delete(`/parties/${partyId}`);
   },
 
   async searchParties(filters: PartySearchFilters, page = 0, size = 20): Promise<{
@@ -185,119 +165,69 @@ export const partyService = {
     totalPages: number;
     currentPage: number;
   }> {
-    try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.append(key, value.toString());
-        }
-      });
-      params.append('page', page.toString());
-      params.append('size', size.toString());
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        params.append(key, value.toString());
+      }
+    });
+    params.append('page', page.toString());
+    params.append('size', size.toString());
 
-      const response = await api.get(`/parties/search?${params.toString()}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error searching parties:', error);
-      throw error;
-    }
+    const response = await api.get(`/parties/search?${params.toString()}`);
+    return response.data;
   },
 
   async getPartiesByCase(caseId: string): Promise<CasePartySummary> {
-    try {
-      const response = await api.get(`/cases/${caseId}/parties`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching case parties:', error);
-      throw error;
-    }
+    const response = await api.get(`/cases/${caseId}/parties`);
+    return response.data;
   },
 
   // Role Management
   async assignRole(roleData: CreateRoleAssignmentRequest): Promise<RoleAssignment> {
-    try {
-      const response = await api.post('/cases/roles', roleData);
-      return response.data;
-    } catch (error) {
-      console.error('Error assigning role:', error);
-      throw error;
-    }
+    const response = await api.post('/cases/roles', roleData);
+    return response.data;
   },
 
   async updateRoleAssignment(roleData: UpdateRoleAssignmentRequest): Promise<RoleAssignment> {
-    try {
-      const response = await api.put(`/cases/roles/${roleData.id}`, roleData);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating role assignment:', error);
-      throw error;
-    }
+    const response = await api.put(`/cases/roles/${roleData.id}`, roleData);
+    return response.data;
   },
 
   async removeRole(roleId: string): Promise<void> {
-    try {
-      await api.delete(`/cases/roles/${roleId}`);
-    } catch (error) {
-      console.error('Error removing role:', error);
-      throw error;
-    }
+    await api.delete(`/cases/roles/${roleId}`);
   },
 
   async getRoleAssignments(caseId: string): Promise<RoleAssignment[]> {
-    try {
-      const response = await api.get(`/cases/${caseId}/roles`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching role assignments:', error);
-      throw error;
-    }
+    const response = await api.get(`/cases/${caseId}/roles`);
+    return response.data;
   },
 
   async getPartyRoles(partyId: string): Promise<RoleAssignment[]> {
-    try {
-      const response = await api.get(`/parties/${partyId}/roles`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching party roles:', error);
-      throw error;
-    }
+    const response = await api.get(`/parties/${partyId}/roles`);
+    return response.data;
   },
 
   // Quick Actions
   async useInsuredAsPayor(caseId: string, insuredPartyId: string): Promise<RoleAssignment> {
-    try {
-      const response = await api.post(`/cases/${caseId}/roles/quick-actions`, {
-        action: 'USE_INSURED_AS_PAYOR',
-        partyId: insuredPartyId
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error using insured as payor:', error);
-      throw error;
-    }
+    const response = await api.post(`/cases/${caseId}/roles/quick-actions`, {
+      action: 'USE_INSURED_AS_PAYOR',
+      partyId: insuredPartyId
+    });
+    return response.data;
   },
 
   async useInsuredAsOwner(caseId: string, insuredPartyId: string): Promise<RoleAssignment> {
-    try {
-      const response = await api.post(`/cases/${caseId}/roles/quick-actions`, {
-        action: 'USE_INSURED_AS_OWNER',
-        partyId: insuredPartyId
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error using insured as owner:', error);
-      throw error;
-    }
+    const response = await api.post(`/cases/${caseId}/roles/quick-actions`, {
+      action: 'USE_INSURED_AS_OWNER',
+      partyId: insuredPartyId
+    });
+    return response.data;
   },
 
   async duplicateParty(partyId: string, newData: Partial<CreatePartyRequest>): Promise<Party> {
-    try {
-      const response = await api.post(`/parties/${partyId}/duplicate`, newData);
-      return response.data;
-    } catch (error) {
-      console.error('Error duplicating party:', error);
-      throw error;
-    }
+    const response = await api.post(`/parties/${partyId}/duplicate`, newData);
+    return response.data;
   },
 
   // Validation
@@ -306,13 +236,8 @@ export const partyService = {
     errors: string[];
     warnings: string[];
   }> {
-    try {
-      const response = await api.get(`/cases/${caseId}/roles/validate-beneficiaries`);
-      return response.data;
-    } catch (error) {
-      console.error('Error validating beneficiary allocation:', error);
-      throw error;
-    }
+    const response = await api.get(`/cases/${caseId}/roles/validate-beneficiaries`);
+    return response.data;
   },
 
   async validatePartyRoles(caseId: string): Promise<{
@@ -320,13 +245,8 @@ export const partyService = {
     errors: string[];
     warnings: string[];
   }> {
-    try {
-      const response = await api.get(`/cases/${caseId}/roles/validate`);
-      return response.data;
-    } catch (error) {
-      console.error('Error validating party roles:', error);
-      throw error;
-    }
+    const response = await api.get(`/cases/${caseId}/roles/validate`);
+    return response.data;
   },
 
   // Bulk Operations
@@ -335,13 +255,8 @@ export const partyService = {
     failed: number;
     errors: Array<{ index: number; message: string }>;
   }> {
-    try {
-      const response = await api.post('/cases/roles/bulk', assignments);
-      return response.data;
-    } catch (error) {
-      console.error('Error bulk assigning roles:', error);
-      throw error;
-    }
+    const response = await api.post('/cases/roles/bulk', assignments);
+    return response.data;
   },
 
   async bulkUpdateParties(updates: UpdatePartyRequest[]): Promise<{
@@ -349,13 +264,8 @@ export const partyService = {
     failed: number;
     errors: Array<{ index: number; message: string }>;
   }> {
-    try {
-      const response = await api.put('/parties/bulk', updates);
-      return response.data;
-    } catch (error) {
-      console.error('Error bulk updating parties:', error);
-      throw error;
-    }
+    const response = await api.put('/parties/bulk', updates);
+    return response.data;
   },
 
   // Analytics
@@ -367,33 +277,23 @@ export const partyService = {
     occupationDistribution: Record<string, number>;
     riskProfiles: Record<string, number>;
   }> {
-    try {
-      const response = await api.get(`/cases/${caseId}/parties/analytics`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching party analytics:', error);
-      throw error;
-    }
+    const response = await api.get(`/cases/${caseId}/parties/analytics`);
+    return response.data;
   },
 
   // Export
   async exportParties(filters: PartySearchFilters): Promise<Blob> {
-    try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          params.append(key, value.toString());
-        }
-      });
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        params.append(key, value.toString());
+      }
+    });
 
-      const response = await api.get(`/parties/export?${params.toString()}`, {
-        responseType: 'blob',
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error exporting parties:', error);
-      throw error;
-    }
+    const response = await api.get(`/parties/export?${params.toString()}`, {
+      responseType: 'blob',
+    });
+    return response.data;
   },
 
   // Mock data for development
