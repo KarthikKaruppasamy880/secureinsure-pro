@@ -25,15 +25,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PolicyServiceTest {
@@ -76,7 +69,7 @@ class PolicyServiceTest {
         testPolicy.setStartDate(LocalDate.now());
         testPolicy.setEndDate(LocalDate.now().plusYears(1));
         testPolicy.setPremiumAmount(new BigDecimal("1200.00"));
-        testPolicy.setCoverageAmount(new BigDecimal("50000.00"));
+        testPolicy.setSumInsured(new BigDecimal("50000.00"));
         testPolicy.setDeductibleAmount(new BigDecimal("500.00"));
         testPolicy.setStatus(PolicyStatus.DRAFT);
         testPolicy.setRiskScore(5);
@@ -164,7 +157,7 @@ class PolicyServiceTest {
         approvedPolicy.setStartDate(LocalDate.now());
         approvedPolicy.setEndDate(LocalDate.now().plusYears(1));
         approvedPolicy.setPremiumAmount(new BigDecimal("1200.00"));
-        approvedPolicy.setCoverageAmount(new BigDecimal("50000.00"));
+        approvedPolicy.setSumInsured(new BigDecimal("50000.00"));
         approvedPolicy.setDeductibleAmount(new BigDecimal("500.00"));
         approvedPolicy.setStatus(PolicyStatus.ACTIVE);
         approvedPolicy.setRiskScore(5);
@@ -200,7 +193,7 @@ class PolicyServiceTest {
         activatedPolicy.setStartDate(LocalDate.now());
         activatedPolicy.setEndDate(LocalDate.now().plusYears(1));
         activatedPolicy.setPremiumAmount(new BigDecimal("1200.00"));
-        activatedPolicy.setCoverageAmount(new BigDecimal("50000.00"));
+        activatedPolicy.setSumInsured(new BigDecimal("50000.00"));
         activatedPolicy.setDeductibleAmount(new BigDecimal("500.00"));
         activatedPolicy.setStatus(PolicyStatus.ACTIVE);
         activatedPolicy.setRiskScore(5);

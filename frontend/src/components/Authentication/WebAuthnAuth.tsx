@@ -26,9 +26,13 @@ interface WebAuthnAuthProps {
 interface CredentialRequestOptions {
   challenge: ArrayBuffer;
   timeout: number;
-  userVerification: UserVerificationRequirement;
+  userVerification: 'required' | 'preferred' | 'discouraged';
   rpId: string;
-  allowCredentials?: PublicKeyCredentialDescriptor[];
+  allowCredentials?: Array<{
+    type: 'public-key';
+    id: ArrayBuffer;
+    transports?: string[];
+  }>;
 }
 
 export const WebAuthnAuth: React.FC<WebAuthnAuthProps> = ({ onSuccess, onFailure, onCancel }) => {
