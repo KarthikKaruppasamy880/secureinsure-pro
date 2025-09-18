@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const VOICE_API_BASE_URL = '/voice-api';
+const VOICE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL + '/voice-api';
 
 const voiceApi = axios.create({
   baseURL: VOICE_API_BASE_URL,

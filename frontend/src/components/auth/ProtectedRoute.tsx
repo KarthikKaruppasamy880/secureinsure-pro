@@ -59,7 +59,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
               </div>
               <h1 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h1>
               <p className="text-gray-600 mb-4">
-                You don't have the required permissions to access this page.
+                You don&apos;t have the required permissions to access this page.
               </p>
               <div className="text-sm text-gray-500">
                 <p>Required permissions:</p>
@@ -104,7 +104,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
               </div>
               <h1 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h1>
               <p className="text-gray-600 mb-4">
-                You don't have the required role to access this page.
+                You don&apos;t have the required role to access this page.
               </p>
               <div className="text-sm text-gray-500">
                 <p>Required roles:</p>

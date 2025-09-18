@@ -50,9 +50,10 @@ public interface NotificationService {
     // Delivery operations
     void sendNotification(Long notificationId);
     void sendNotificationImmediately(NotificationDto notificationDto);
-    void scheduleNotification(NotificationDto notificationDto, LocalDateTime scheduledAt);
+    NotificationDto scheduleNotification(NotificationDto notificationDto, LocalDateTime scheduledAt);
     void cancelNotification(Long notificationId);
-    void retryFailedNotification(Long notificationId);
+    void cancelScheduledNotification(Long notificationId);
+    NotificationDto retryFailedNotification(Long notificationId);
     void markAsRead(Long notificationId);
     void markAsAcknowledged(Long notificationId);
     void markAllAsRead(Long userId);
@@ -60,7 +61,7 @@ public interface NotificationService {
 
     // Batch operations
     void sendBatchNotifications(List<NotificationDto> notifications);
-    void scheduleBatchNotifications(List<NotificationDto> notifications, LocalDateTime scheduledAt);
+    List<NotificationDto> scheduleBatchNotifications(List<NotificationDto> notifications, LocalDateTime scheduledAt);
     void cancelBatchNotifications(List<Long> notificationIds);
 
     // Template operations
@@ -93,7 +94,7 @@ public interface NotificationService {
     void processScheduledNotifications();
     void processFailedNotifications();
     void cleanupOldNotifications(LocalDateTime cutoffDate);
-    void validateNotification(NotificationDto notificationDto);
+    boolean validateNotification(NotificationDto notificationDto);
     String generateNotificationId();
     Map<String, Object> getDeliveryStatus(Long notificationId);
 

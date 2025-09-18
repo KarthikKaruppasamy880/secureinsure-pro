@@ -60,6 +60,7 @@ public class ClaimDocumentDto {
     private Long uploadedBy;
     
     @Schema(description = "Whether document is verified")
+    @Builder.Default
     private Boolean isVerified = false;
     
     @Schema(description = "Document verification timestamp")
@@ -69,6 +70,7 @@ public class ClaimDocumentDto {
     private Long verifiedBy;
     
     @Schema(description = "Document status", example = "PENDING")
+    @Builder.Default
     private String status = "PENDING";
     
     @Schema(description = "Document tags for categorization")
@@ -80,4 +82,14 @@ public class ClaimDocumentDto {
     @Schema(description = "Last update timestamp")
     private LocalDateTime updatedAt;
 }
+
+
+
+
+
+
+
+
+
+
 

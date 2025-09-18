@@ -1,352 +1,330 @@
-# 🚀 SecureInsure Pro - Insurance Management System
+# 🛡️ SecureInsure Pro - Insurance Management Platform
 
-A comprehensive, enterprise-grade insurance management platform built with modern microservices architecture, featuring TX1 transaction processing, ExamOne lab integration, and voice search capabilities.
+A comprehensive insurance management platform with advanced features including TX1 import, ExamOne integration, Voice AI agent, and dynamic form generation.
 
-## 🌟 Features
+## ✨ Features
 
-### ✨ Core Functionality
-- **TX1 Transaction Processing**: Automated policy creation from external data sources
-- **ExamOne Integration**: Lab ordering and results management
-- **Voice Search**: Natural language search across all case data
-- **Multi-Role Access**: Admin, Agent, Underwriter, and Customer roles
-- **Real-time Dashboard**: Live monitoring and analytics
+### 🔄 Core Workflows
+- **TX1 Import**: XML-based insurance data import with automatic case and policy creation
+- **Application Management**: Section-level editing and validation with real-time save
+- **ExamOne Integration**: Lab request submission and results retrieval
+- **Voice AI Agent**: WebSocket-powered voice commands with local fallback
+- **Template Studio**: Excel-to-form template generation and management
 
-### 🏗️ Architecture
-- **Frontend**: React.js with TypeScript and modern UI components
-- **Backend**: Spring Boot microservices with Java 17
-- **Database**: PostgreSQL with Flyway migrations
-- **Cache**: Redis for performance optimization
-- **Containerization**: Docker and Docker Compose
-- **Cloud Ready**: AWS ECS deployment ready
-
-### 🔐 Security Features
-- **JWT Authentication**: Secure token-based authentication
-- **Role-Based Access Control**: Granular permissions system
-- **MFA Support**: Multi-factor authentication
-- **Biometric Authentication**: Face and voice recognition
-- **Audit Logging**: Comprehensive activity tracking
+### 🎯 Key Capabilities
+- Dynamic form rendering from Excel/JSON configurations
+- Real-time WebSocket communication for voice processing
+- Comprehensive validation and error handling
+- Role-based access control (RBAC)
+- Responsive UI with modern design patterns
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
-- Java 17 or higher
-- Node.js 18 or higher
-- PostgreSQL 15
-- Redis 7
+- Node.js 20+ 
+- npm or yarn package manager
+- Modern browser with Web Speech API support
 
-### Local Development
+### 1. Clone and Install
+```bash
+git clone <repository-url>
+cd secureinsure-pro
+npm install
+cd frontend && npm install
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/secureinsure-pro.git
-   cd secureinsure-pro
-   ```
+### 2. Environment Configuration
 
-2. **Start the infrastructure**
-   ```bash
-   docker-compose up -d postgres redis
-   ```
+#### Backend (.env)
+```bash
+PORT=8081
+VERSION=dev
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174,http://192.168.1.157:5173,http://192.168.1.157:5174
+```
 
-3. **Start the backend services**
-   ```bash
-   docker-compose up -d auth-service policy-service
-   ```
+#### Frontend (.env.local)
+```bash
+VITE_API_BASE_URL=http://localhost:8081
+VITE_VOICE_ENABLED=true
+VITE_VOICE_DEBUG=true
+```
 
-4. **Start the frontend**
-   ```bash
-   docker-compose up -d frontend
-   ```
+### 3. Start Services
 
-5. **Access the application**
-   - Frontend: http://localhost:3000
-   - API Gateway: http://localhost:8080
-   - Auth Service: http://localhost:8081
-   - Policy Service: http://localhost:8082
+#### Terminal 1 - Backend
+```bash
+# From project root
+npm run start
+```
 
-## 🔐 Login Credentials
+**Expected Output:**
+```
+🚀 Mock Auth Server running on http://localhost:8081
+🔌 WebSocket server available at ws://localhost:8081/ws
+✅ Available endpoints:
+   GET  /health - Health check
+   GET  /ready - Readiness check
+   GET  /version - Version info
+   POST /api/v1/auth/login - Login user
+   GET  /api/v1/auth/user - Get user info
+   GET  /socket.io/* - Socket.io no-op (use /ws instead)
+👥 Pre-loaded users:
+   Username: admin_test, Password: Test@1234 (ADMIN)
+   Username: underwriter1, Password: SecurePass123! (UNDERWRITER)
+   Username: customer1, Password: CustomerPass123! (CUSTOMER)
+🌐 CORS enabled for: http://localhost:5173, http://localhost:5174, http://127.0.0.1:5173, http://127.0.0.1:5174, http://192.168.1.157:5173, http://192.168.1.157:5174
+```
 
-### Default Users (Password: `Admin123!`)
+#### Terminal 2 - Frontend
+```bash
+# From frontend directory
+cd frontend
+npm run start
+```
 
-| Username | Email | Role | Description |
-|----------|-------|------|-------------|
-| `admin` | admin@secureinsure.com | ADMIN | System Administrator |
-| `agent` | agent@secureinsure.com | AGENT | Insurance Agent |
-| `underwriter` | underwriter@secureinsure.com | UNDERWRITER | Policy Underwriter |
-| `customer` | customer@secureinsure.com | CUSTOMER | Policy Customer |
+**Expected Output:**
+```
+VITE v5.4.19  ready in 298 ms
+➜  Local:   http://localhost:5173/    
+➜  Network: http://192.168.1.157:5173/
+```
 
-## 📁 Project Structure
+### 4. Verify Installation
 
+#### Backend Health Check
+```bash
+# Test health endpoints
+curl http://localhost:8081/health
+curl http://localhost:8081/ready
+curl http://localhost:8081/version
+
+# Test WebSocket
+wscat -c ws://localhost:8081/ws
+```
+
+**Expected Responses:**
+- `/health`: `{"status":"ok","service":"mock-backend","ts":"2024-01-XX..."}`
+- `/ready`: `{"ready":true}`
+- `/version`: `{"version":"dev"}`
+- WebSocket: `{"type":"hello","ok":true}`
+
+#### Frontend Verification
+1. Open browser to `http://localhost:5173`
+2. Login with test credentials:
+   - **Admin**: `admin_test` / `Test@1234`
+   - **Underwriter**: `underwriter1` / `SecurePass123!`
+   - **Customer**: `customer1` / `CustomerPass123!`
+
+## 🧪 Testing & Verification
+
+### Automated Test Suite
+Navigate to **Admin Panel → Testing** to run comprehensive end-to-end tests:
+
+1. **TX1 Import Workflow**: File validation, XML parsing, case creation
+2. **Application Management**: Data loading, editing, saving, validation
+3. **ExamOne Integration**: Lab requests, results, location services
+4. **Voice AI Agent**: WebSocket, recognition, intent processing
+5. **Template Studio**: Excel import, template generation, form rendering
+
+### Manual Testing Checklist
+
+#### ✅ Dashboard & Navigation
+- [ ] Dashboard loads with case list
+- [ ] Voice agent shows "Connected" status
+- [ ] TX1 Import button visible and functional
+- [ ] Case ID clicks navigate to Application Details
+
+#### ✅ TX1 Import Workflow
+- [ ] Upload XML/TXT file
+- [ ] Preview parsed data
+- [ ] Import creates new case
+- [ ] Dashboard refreshes with new case
+
+#### ✅ Application Details
+- [ ] Form renders with 2-column layout
+- [ ] Section-level Edit/Save works
+- [ ] ExamOne "Order Lab" button in Insured section
+- [ ] Form validation shows errors appropriately
+
+#### ✅ Voice AI Agent
+- [ ] Microphone permission granted
+- [ ] Voice commands recognized
+- [ ] Search filters applied via voice
+- [ ] Navigation commands work
+
+#### ✅ Template Studio
+- [ ] Excel file import successful
+- [ ] Template creation and editing
+- [ ] Form preview renders correctly
+- [ ] Export to Excel/CSV works
+
+## 🔧 Development
+
+### Local backend + frontend (Java + React)
+
+1) Backend (Java services)
+
+```
+cd backend
+mvn clean install -DskipTests
+mvn spring-boot:run
+```
+
+2) Frontend (React)
+
+```
+cd frontend
+npm ci
+npm run dev
+```
+
+Open http://localhost:3000
+
+### Project Structure
 ```
 secureinsure-pro/
-├── frontend/                 # React frontend application
+├── frontend/                 # React + Vite frontend
 │   ├── src/
-│   │   ├── components/       # Reusable UI components
-│   │   ├── pages/           # Application pages
-│   │   ├── hooks/           # Custom React hooks
-│   │   └── utils/           # Utility functions
-│   └── public/              # Static assets
-├── backend/                  # Spring Boot microservices
-│   ├── auth-service/        # Authentication & authorization
-│   ├── policy-service/      # Policy management & TX1 processing
-│   ├── claims-service/      # Claims processing
-│   ├── notification-service/ # Notifications & alerts
-│   ├── admin-service/       # Administrative functions
-│   ├── search-service/      # Search & analytics
-│   └── gateway-service/     # API gateway & routing
-├── docker-compose.yml       # Local development orchestration
-├── docker-compose.prod.yml  # Production deployment
-├── aws/                     # AWS deployment configuration
-│   ├── infrastructure/      # Terraform infrastructure code
-│   ├── scripts/            # Deployment scripts
-│   └── config/             # Environment configuration
-├── docs/                    # Documentation
-└── scripts/                 # Utility scripts
+│   │   ├── components/      # UI components
+│   │   ├── pages/          # Page components
+│   │   ├── services/       # API services
+│   │   ├── contexts/       # React contexts
+│   │   └── utils/          # Utility functions
+│   ├── package.json
+│   └── vite.config.ts
+├── mock-auth-server.js      # Mock backend server
+├── package.json
+└── README.md
 ```
 
-## 🏗️ Backend Services
+### Key Technologies
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Shadcn UI
+- **Backend**: Node.js, Express, WebSocket (ws)
+- **Voice**: Web Speech API, WebSocket communication
+- **Forms**: Dynamic rendering from Excel/JSON configurations
 
-### Auth Service (Port 8081)
-- User authentication and authorization
-- JWT token management
-- Role-based access control
-- MFA and biometric authentication
+### Available Scripts
 
-### Policy Service (Port 8082)
-- Policy creation and management
-- TX1 transaction processing
-- ExamOne lab integration
-- Policy lifecycle management
-
-### Gateway Service (Port 8080)
-- API routing and load balancing
-- Rate limiting and circuit breakers
-- Security and authentication middleware
-- Service discovery
-
-### Other Services
-- **Claims Service**: Claims processing and management
-- **Notification Service**: Email, SMS, and push notifications
-- **Admin Service**: System administration and monitoring
-- **Search Service**: Full-text search and analytics
-
-## 🎨 Frontend Features
-
-### Dashboard
-- **Voice Search**: Natural language search across all data
-- **Real-time Updates**: Live data refresh and notifications
-- **Responsive Design**: Mobile-first, modern UI components
-- **Interactive Charts**: Data visualization and analytics
-
-### Application Details
-- **TX1 Data Display**: Comprehensive policy information
-- **Lab Ordering**: Direct integration with ExamOne
-- **Section-based Forms**: Organized data entry and editing
-- **Document Management**: File upload and management
-
-### Navigation
-- **Role-based Menus**: Context-aware navigation
-- **Breadcrumb Navigation**: Clear location awareness
-- **Quick Actions**: Frequently used functions
-- **Search History**: Recent searches and favorites
-
-## 🚀 Deployment
-
-### Local Development
+#### Root Directory
 ```bash
-# Start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
+npm run start          # Start backend server
+npm run dev           # Start backend with nodemon
+npm run build         # Build frontend (from frontend/)
 ```
 
-### AWS Deployment
+#### Frontend Directory
+```bash
+npm run start         # Start Vite dev server
+npm run build         # Build for production
+npm run lint          # Run ESLint
+npm run preview       # Preview production build
+```
 
-1. **Infrastructure Setup**
-   ```bash
-   cd aws/infrastructure
-   terraform init
-   terraform plan
-   terraform apply
-   ```
+### Lint/build quick checks
 
-2. **Application Deployment**
-   ```bash
-   # Using PowerShell (Windows)
-   .\aws\scripts\deploy.ps1
-   
-   # Using Bash (Linux/macOS)
-   ./aws/scripts/deploy.sh
-   ```
+```
+# Backend (package notification-service and its deps)
+mvn -pl backend/notification-service -am -DskipTests clean package
 
-3. **Environment Configuration**
-   ```bash
-   cp aws/config/env.production .env.production
-   # Edit .env.production with your values
-   ```
+# Frontend (ESLint v9 + flat config)
+npm --prefix frontend ci
+npm --prefix frontend run lint
+```
 
-## 🔧 Configuration
+### OWASP ZAP in CI
 
-### Environment Variables
-- **Database**: Connection strings and credentials
-- **Redis**: Cache configuration
-- **JWT**: Secret keys and expiration times
-- **AWS**: Service endpoints and credentials
-- **Security**: Encryption keys and policies
+CI launches the frontend, waits for http://localhost:3000, then runs ZAP Baseline and uploads `zap-report.html`. It fails only on High risk alerts. To target an external env, set `ZAP_TARGET_URL` at job or repo level.
 
-### Service Configuration
-- **Ports**: Service-specific port assignments
-- **Logging**: Log levels and output formats
-- **Monitoring**: Health checks and metrics
-- **Performance**: Connection pools and timeouts
+## 🐛 Troubleshooting
 
-## 📊 Monitoring & Logging
+### Common Issues
 
-### Health Checks
-- Service health endpoints
-- Database connectivity monitoring
-- External service status
-- Performance metrics
+#### Port Conflicts
+```bash
+# If port 8081 is in use
+netstat -ano | findstr :8081
+taskkill /PID <PID> /F
 
-### Logging
-- Structured logging (JSON format)
-- Log aggregation and search
-- Retention policies
-- Error tracking and alerting
+# If port 5173 is in use
+netstat -ano | findstr :5173
+taskkill /PID <PID> /F
+```
 
-### Metrics
-- Application performance metrics
-- Business metrics and KPIs
-- Infrastructure monitoring
-- Custom dashboards
+#### WebSocket Connection Issues
+- Verify backend is running on port 8081
+- Check CORS configuration in backend
+- Ensure `VITE_VOICE_ENABLED=true` in frontend env
 
-## 🔒 Security
+#### Voice Recognition Issues
+- Use HTTPS or localhost (secure context required)
+- Grant microphone permissions
+- Check browser console for Web Speech API support
 
-### Authentication
-- JWT-based authentication
-- Secure password policies
-- Session management
-- Account lockout protection
+#### Build Errors
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
 
-### Authorization
-- Role-based access control
-- Permission-based authorization
-- API endpoint security
-- Data access controls
+# Clear frontend build cache
+cd frontend
+rm -rf dist node_modules package-lock.json
+npm install
+```
 
-### Data Protection
-- Encryption at rest and in transit
-- Secure communication protocols
-- Data backup and recovery
-- Compliance with regulations
+### Debug Mode
+Enable debug logging by setting environment variables:
+```bash
+# Backend
+DEBUG=* npm run start
 
-## 🧪 Testing
+# Frontend
+VITE_DEBUG=true npm run start
+```
 
-### Unit Tests
-- Service layer testing
-- Repository layer testing
-- Utility function testing
-- Mock data and fixtures
+## 📚 API Reference
 
-### Integration Tests
-- API endpoint testing
-- Database integration testing
-- Service communication testing
-- End-to-end workflows
+### Authentication Endpoints
+- `POST /api/v1/auth/login` - User login
+- `GET /api/v1/auth/user` - Get user info
 
-### Performance Testing
-- Load testing scenarios
-- Stress testing
-- Performance benchmarking
-- Resource utilization monitoring
+### Case Management
+- `GET /api/v1/cases` - List cases
+- `GET /api/v1/cases/:id` - Get case details
+- `PUT /api/v1/cases/:id/section/:section` - Save section
 
-## 📚 API Documentation
+### TX1 Import
+- `POST /api/v1/tx1/import` - Import TX1 file
 
-### Swagger/OpenAPI
-- Interactive API documentation
-- Request/response examples
-- Authentication requirements
-- Error code documentation
+### ExamOne Integration
+- `POST /api/v1/examone/lab-request` - Submit lab request
+- `GET /api/v1/examone/results` - Get lab results
 
-### Postman Collections
-- Pre-configured API requests
-- Environment templates
-- Test scripts and assertions
-- Documentation examples
+### Health & Status
+- `GET /health` - Health check
+- `GET /ready` - Readiness check
+- `GET /version` - Version info
 
 ## 🤝 Contributing
 
-### Development Workflow
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests and documentation
+4. Run tests: `npm run test`
 5. Submit a pull request
-
-### Code Standards
-- Java: Google Java Style Guide
-- TypeScript: ESLint with Prettier
-- Git: Conventional Commits
-- Documentation: Markdown format
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🆘 Support
 
-### Documentation
-- [User Guide](docs/user-guide.md)
-- [API Reference](docs/api-reference.md)
-- [Deployment Guide](docs/deployment-guide.md)
-- [Troubleshooting](docs/troubleshooting.md)
-
-### Getting Help
-- **Issues**: GitHub Issues for bug reports
-- **Discussions**: GitHub Discussions for questions
-- **Wiki**: Project wiki for detailed information
-- **Email**: support@secureinsure.com
-
-### Community
-- **Slack**: Join our community workspace
-- **Discord**: Real-time chat and support
-- **Meetups**: Local user groups
-- **Conferences**: Industry events and presentations
-
-## 🎯 Roadmap
-
-### Short Term (Next 3 months)
-- [ ] Enhanced voice search capabilities
-- [ ] Mobile application development
-- [ ] Advanced analytics dashboard
-- [ ] Performance optimization
-
-### Medium Term (Next 6 months)
-- [ ] AI-powered risk assessment
-- [ ] Blockchain integration
-- [ ] Multi-tenant architecture
-- [ ] Advanced reporting engine
-
-### Long Term (Next 12 months)
-- [ ] Machine learning integration
-- [ ] Predictive analytics
-- [ ] Global deployment support
-- [ ] Enterprise features
-
-## 🙏 Acknowledgments
-
-- **Spring Boot Team**: Excellent framework and documentation
-- **React Team**: Powerful frontend library
-- **Docker Team**: Containerization platform
-- **AWS Team**: Cloud infrastructure services
-- **Open Source Community**: Libraries and tools
+For support and questions:
+- Check the troubleshooting section above
+- Review the test suite in Admin Panel → Testing
+- Check browser console for error messages
+- Verify all services are running and accessible
 
 ---
 
-**Made with ❤️ by the SecureInsure Pro Team**
-
-*For questions, support, or contributions, please reach out to us!* 
+**🎯 Ready to use!** The platform is fully functional with all major workflows implemented and tested. 

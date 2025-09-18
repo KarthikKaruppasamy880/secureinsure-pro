@@ -79,7 +79,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 type SecurityFormData = z.infer<typeof securitySchema>;
 type PreferencesFormData = z.infer<typeof preferencesSchema>;
 
-interface User {
+interface UserProfile {
   id: string;
   firstName: string;
   lastName: string;
@@ -101,7 +101,7 @@ interface User {
 }
 
 interface UserProfileProps {
-  user?: User;
+  user?: UserProfile;
   onUpdateProfile: (data: ProfileFormData) => Promise<void>;
   onUpdateSecurity: (data: SecurityFormData) => Promise<void>;
   onUpdatePreferences: (data: PreferencesFormData) => Promise<void>;
@@ -110,7 +110,7 @@ interface UserProfileProps {
   error?: string;
 }
 
-export default function UserProfile({
+export default function UserProfileComponent({
   user,
   onUpdateProfile,
   onUpdateSecurity,

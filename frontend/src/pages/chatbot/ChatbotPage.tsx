@@ -60,7 +60,8 @@ const ChatbotPage: React.FC = () => {
 
     },
     onError: (error) => {
-      toast.error('Failed to send message. Please try again.');
+      const errorMessage = chatbotService.handleError(error);
+      toast.error(errorMessage);
       console.error('Chatbot error:', error);
     }
   });
@@ -80,7 +81,8 @@ const ChatbotPage: React.FC = () => {
       };
       setMessages([welcomeMessage]);
 
-
+      // Save session to storage
+      chatbotService.saveSessionToStorage(sessionData.sessionId, 'current-user');
     }
   }, [sessionData, voiceEnabled]);
 

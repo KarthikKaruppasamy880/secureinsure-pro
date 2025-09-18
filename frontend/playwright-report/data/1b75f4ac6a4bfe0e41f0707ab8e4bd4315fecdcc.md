@@ -1,0 +1,342 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - heading "SecureInsure" [level=2] [ref=e8]
+    - navigation [ref=e9]:
+      - link "Dashboard" [ref=e10] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e11] [cursor=pointer]
+        - generic [ref=e15] [cursor=pointer]: Dashboard
+      - link "Search" [ref=e16] [cursor=pointer]:
+        - /url: /search
+        - img [ref=e17] [cursor=pointer]
+        - generic [ref=e21] [cursor=pointer]: Search
+      - link "Chatbot" [ref=e22] [cursor=pointer]:
+        - /url: /chatbot
+        - img [ref=e23] [cursor=pointer]
+        - generic [ref=e26] [cursor=pointer]: Chatbot
+      - link "Profile Account settings & biometrics" [ref=e27] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e28] [cursor=pointer]
+        - generic [ref=e31] [cursor=pointer]:
+          - generic [ref=e32] [cursor=pointer]: Profile
+          - paragraph [ref=e33] [cursor=pointer]: Account settings & biometrics
+      - link "Notifications Manage notifications & alerts" [ref=e34] [cursor=pointer]:
+        - /url: /notifications
+        - img [ref=e35] [cursor=pointer]
+        - generic [ref=e38] [cursor=pointer]:
+          - generic [ref=e39] [cursor=pointer]: Notifications
+          - paragraph [ref=e40] [cursor=pointer]: Manage notifications & alerts
+      - link "Underwriting Risk assessment and premium rates" [ref=e41] [cursor=pointer]:
+        - /url: /underwriting
+        - img [ref=e42] [cursor=pointer]
+        - generic [ref=e45] [cursor=pointer]:
+          - generic [ref=e46] [cursor=pointer]: Underwriting
+          - paragraph [ref=e47] [cursor=pointer]: Risk assessment and premium rates
+      - link "Create Case Create new insurance case with dynamic forms" [ref=e48] [cursor=pointer]:
+        - /url: /create-case
+        - img [ref=e49] [cursor=pointer]
+        - generic [ref=e52] [cursor=pointer]:
+          - generic [ref=e53] [cursor=pointer]: Create Case
+          - paragraph [ref=e54] [cursor=pointer]: Create new insurance case with dynamic forms
+      - link "Admin System administration" [ref=e55] [cursor=pointer]:
+        - /url: /admin
+        - img [ref=e56] [cursor=pointer]
+        - generic [ref=e59] [cursor=pointer]:
+          - generic [ref=e60] [cursor=pointer]: Admin
+          - paragraph [ref=e61] [cursor=pointer]: System administration
+      - link "Audit Access logs and audit trails" [ref=e62] [cursor=pointer]:
+        - /url: /audit
+        - img [ref=e63] [cursor=pointer]
+        - generic [ref=e66] [cursor=pointer]:
+          - generic [ref=e67] [cursor=pointer]: Audit
+          - paragraph [ref=e68] [cursor=pointer]: Access logs and audit trails
+    - generic [ref=e70]:
+      - paragraph [ref=e71]: Admin Test
+      - paragraph [ref=e72]: Administrator
+      - paragraph [ref=e73]: +1 more roles
+  - generic [ref=e74]:
+    - banner [ref=e75]:
+      - generic [ref=e76]:
+        - heading "SecureInsure Pro" [level=1] [ref=e79]
+        - button "AI Assistant" [ref=e81] [cursor=pointer]:
+          - img [ref=e82] [cursor=pointer]
+          - generic [ref=e85] [cursor=pointer]: AI Assistant
+        - generic [ref=e86]:
+          - button "3" [ref=e87] [cursor=pointer]:
+            - img [ref=e88] [cursor=pointer]
+            - generic [ref=e91] [cursor=pointer]: "3"
+          - generic [ref=e92]:
+            - generic [ref=e93]:
+              - paragraph [ref=e94]: Admin Test
+              - paragraph [ref=e95]: ADMIN
+            - button [ref=e96] [cursor=pointer]:
+              - img [ref=e97] [cursor=pointer]
+          - button [ref=e100] [cursor=pointer]:
+            - img [ref=e101] [cursor=pointer]
+          - button [ref=e104] [cursor=pointer]:
+            - img [ref=e105] [cursor=pointer]
+    - main [ref=e108]:
+      - generic [ref=e110]:
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - heading "Welcome back, Admin!" [level=1] [ref=e114]
+            - paragraph [ref=e115]: Here's what's happening with your insurance portfolio today.
+          - generic [ref=e116]:
+            - generic [ref=e118]: Offline
+            - generic [ref=e119]: Voice ON
+        - generic [ref=e121]:
+          - heading "Backend Health Status" [level=3] [ref=e123]:
+            - img [ref=e124]
+            - text: Backend Health Status
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - generic [ref=e131]: Service Status
+              - button "Refresh" [ref=e132] [cursor=pointer]
+            - generic [ref=e133]:
+              - generic [ref=e134]:
+                - generic [ref=e135]: /health
+                - generic [ref=e136]: UP
+              - generic [ref=e137]:
+                - generic [ref=e138]:
+                  - img [ref=e139]
+                  - generic [ref=e142]: "Service: mock-backend"
+                - generic [ref=e143]: "Version:"
+                - generic [ref=e144]: "Timestamp: Invalid Date"
+            - generic [ref=e145]:
+              - generic [ref=e146]:
+                - generic [ref=e147]: /ready
+                - generic [ref=e148]: UP
+              - generic [ref=e149]:
+                - generic [ref=e150]:
+                  - img [ref=e151]
+                  - generic [ref=e154]: "Service: mock-backend"
+                - generic [ref=e155]: "Version:"
+                - generic [ref=e156]: "Timestamp: Invalid Date"
+            - generic [ref=e157]:
+              - generic [ref=e158]:
+                - generic [ref=e159]: /version
+                - generic [ref=e160]: UP
+              - generic [ref=e161]:
+                - generic [ref=e162]:
+                  - img [ref=e163]
+                  - generic [ref=e166]: "Service: mock-backend"
+                - generic [ref=e167]: "Version: dev"
+                - generic [ref=e168]: "Timestamp: Invalid Date"
+            - generic [ref=e169]: "Backend URL: http://localhost:8082"
+        - region "Voice Search & Assistant" [ref=e170]:
+          - generic [ref=e171]:
+            - heading "Voice Search & Assistant" [level=3] [ref=e173]
+            - generic [ref=e175]:
+              - heading "Voice Assistant Consent" [level=3] [ref=e177]:
+                - img [ref=e178]
+                - text: Voice Assistant Consent
+              - generic [ref=e180]:
+                - generic [ref=e182]:
+                  - img [ref=e183]
+                  - generic [ref=e185]:
+                    - heading "Privacy & Security Notice" [level=4] [ref=e186]
+                    - paragraph [ref=e187]: The voice assistant processes your voice commands to help you search and manage insurance cases. All PII (SSN, DOB, phone, email) is automatically redacted for security.
+                - generic [ref=e188]:
+                  - button "Enable Voice Assistant" [ref=e189] [cursor=pointer]:
+                    - img [ref=e190] [cursor=pointer]
+                    - text: Enable Voice Assistant
+                  - button "Disable Voice Features" [ref=e193] [cursor=pointer]
+        - generic [ref=e194]:
+          - generic [ref=e196]:
+            - img [ref=e198]
+            - generic [ref=e200]:
+              - paragraph [ref=e201]: Total Policies
+              - paragraph [ref=e202]: "0"
+          - generic [ref=e204]:
+            - img [ref=e206]
+            - generic [ref=e208]:
+              - paragraph [ref=e209]: Active Policies
+              - paragraph [ref=e210]: "0"
+          - generic [ref=e212]:
+            - img [ref=e214]
+            - generic [ref=e216]:
+              - paragraph [ref=e217]: Pending Claims
+              - paragraph [ref=e218]: "0"
+          - generic [ref=e220]:
+            - img [ref=e222]
+            - generic [ref=e224]:
+              - paragraph [ref=e225]: Total Revenue
+              - paragraph [ref=e226]: $0.00
+        - generic [ref=e227]:
+          - generic [ref=e229]:
+            - heading "Active Cases" [level=3] [ref=e230]
+            - generic [ref=e231]:
+              - button "Import TX1" [ref=e232] [cursor=pointer]:
+                - img [ref=e233] [cursor=pointer]
+                - text: Import TX1
+              - button "Create Case" [ref=e236] [cursor=pointer]:
+                - img [ref=e237] [cursor=pointer]
+                - text: Create Case
+          - generic [ref=e239]:
+            - generic [ref=e240]:
+              - generic [ref=e241]:
+                - img [ref=e242]
+                - textbox "Search cases, insured names, or agents..." [ref=e244]
+              - generic [ref=e245]:
+                - textbox "Search cases, insured names" [ref=e246]
+                - button "Search" [ref=e247] [cursor=pointer]
+                - generic [ref=e248]: "Voice: offline"
+              - generic [ref=e249]:
+                - combobox [ref=e250]:
+                  - option "All Statuses" [selected]
+                  - option "Under Review"
+                  - option "Pending Documents"
+                  - option "Approved"
+                  - option "Underwriting"
+                  - option "Rejected"
+                - combobox [ref=e251]:
+                  - option "All Priorities" [selected]
+                  - option "Low"
+                  - option "Medium"
+                  - option "High"
+                  - option "Urgent"
+                - combobox [ref=e252]:
+                  - option "Newest First" [selected]
+                  - option "Oldest First"
+                  - option "Recently Updated"
+                  - option "Highest Face Amount"
+                  - option "Priority (High to Low)"
+            - table [ref=e254]:
+              - rowgroup [ref=e255]:
+                - row "Case ID Insured Product Status Face Amount Premium Agent Priority Created Actions" [ref=e256]:
+                  - cell "Case ID" [ref=e257]
+                  - cell "Insured" [ref=e258]
+                  - cell "Product" [ref=e259]
+                  - cell "Status" [ref=e260]
+                  - cell "Face Amount" [ref=e261]
+                  - cell "Premium" [ref=e262]
+                  - cell "Agent" [ref=e263]
+                  - cell "Priority" [ref=e264]
+                  - cell "Created" [ref=e265]
+                  - cell "Actions" [ref=e266]
+              - rowgroup [ref=e267]:
+                - row "CS-TX1-1758115220776 TX1 Imported Customer Under Review $750,000.00 $200.00 TX1 System High 9/17/2025, 9:20:20 AM" [ref=e268]:
+                  - cell "CS-TX1-1758115220776" [ref=e269]:
+                    - link "CS-TX1-1758115220776" [ref=e270] [cursor=pointer]:
+                      - /url: /application/CS-TX1-1758115220776
+                  - cell "TX1 Imported Customer" [ref=e271]
+                  - cell [ref=e272]
+                  - cell "Under Review" [ref=e273]:
+                    - generic [ref=e274]: Under Review
+                  - cell "$750,000.00" [ref=e275]
+                  - cell "$200.00" [ref=e276]
+                  - cell "TX1 System" [ref=e277]
+                  - cell "High" [ref=e278]:
+                    - generic [ref=e279]: High
+                  - cell "9/17/2025, 9:20:20 AM" [ref=e280]
+                  - cell [ref=e281]:
+                    - button [ref=e282] [cursor=pointer]:
+                      - img [ref=e283] [cursor=pointer]
+                - row "CS-2024-001 Jane Doe Under Review $500,000.00 $150.00 John Smith High 1/15/2024, 5:30:00 AM" [ref=e285]:
+                  - cell "CS-2024-001" [ref=e286]:
+                    - link "CS-2024-001" [ref=e287] [cursor=pointer]:
+                      - /url: /application/CS-2024-001
+                  - cell "Jane Doe" [ref=e288]
+                  - cell [ref=e289]
+                  - cell "Under Review" [ref=e290]:
+                    - generic [ref=e291]: Under Review
+                  - cell "$500,000.00" [ref=e292]
+                  - cell "$150.00" [ref=e293]
+                  - cell "John Smith" [ref=e294]
+                  - cell "High" [ref=e295]:
+                    - generic [ref=e296]: High
+                  - cell "1/15/2024, 5:30:00 AM" [ref=e297]
+                  - cell [ref=e298]:
+                    - button [ref=e299] [cursor=pointer]:
+                      - img [ref=e300] [cursor=pointer]
+                - row "CS-2024-002 Michael Johnson Pending Documents $250,000.00 $75.00 Sarah Wilson Medium 1/14/2024, 4:15:00 AM" [ref=e302]:
+                  - cell "CS-2024-002" [ref=e303]:
+                    - link "CS-2024-002" [ref=e304] [cursor=pointer]:
+                      - /url: /application/CS-2024-002
+                  - cell "Michael Johnson" [ref=e305]
+                  - cell [ref=e306]
+                  - cell "Pending Documents" [ref=e307]:
+                    - generic [ref=e308]: Pending Documents
+                  - cell "$250,000.00" [ref=e309]
+                  - cell "$75.00" [ref=e310]
+                  - cell "Sarah Wilson" [ref=e311]
+                  - cell "Medium" [ref=e312]:
+                    - generic [ref=e313]: Medium
+                  - cell "1/14/2024, 4:15:00 AM" [ref=e314]
+                  - cell [ref=e315]:
+                    - button [ref=e316] [cursor=pointer]:
+                      - img [ref=e317] [cursor=pointer]
+        - heading "Recent Activities" [level=3] [ref=e321]
+        - generic [ref=e323]:
+          - heading "Quick Actions" [level=3] [ref=e325]
+          - generic [ref=e327]:
+            - button "Create Policy" [ref=e328] [cursor=pointer]:
+              - img [ref=e329] [cursor=pointer]
+              - text: Create Policy
+            - button "Submit Claim" [ref=e331] [cursor=pointer]:
+              - img [ref=e332] [cursor=pointer]
+              - text: Submit Claim
+            - button "Manage Parties" [ref=e334] [cursor=pointer]:
+              - img [ref=e335] [cursor=pointer]
+              - text: Manage Parties
+        - generic [ref=e337]:
+          - generic [ref=e338]:
+            - generic [ref=e339]:
+              - heading "Biometric Authentication Demo" [level=2] [ref=e340]
+              - paragraph [ref=e341]: Test and manage your biometric authentication methods
+            - generic [ref=e342]:
+              - button "Refresh" [disabled]:
+                - img
+                - text: Refresh
+              - button "Full Settings" [ref=e343] [cursor=pointer]:
+                - img [ref=e344] [cursor=pointer]
+                - text: Full Settings
+          - generic [ref=e347]:
+            - generic [ref=e350]:
+              - img [ref=e352]
+              - generic [ref=e355]:
+                - paragraph [ref=e356]: Active Methods
+                - paragraph [ref=e357]: "0"
+            - generic [ref=e360]:
+              - img [ref=e362]
+              - generic [ref=e364]:
+                - paragraph [ref=e365]: Supported
+                - paragraph [ref=e366]: "0"
+            - generic [ref=e369]:
+              - img [ref=e371]
+              - generic [ref=e373]:
+                - paragraph [ref=e374]: Ready to Test
+                - paragraph [ref=e375]: "0"
+            - generic [ref=e378]:
+              - img [ref=e380]
+              - generic [ref=e383]:
+                - paragraph [ref=e384]: Security Level
+                - paragraph [ref=e385]: High
+          - generic [ref=e386]:
+            - heading "Quick Actions" [level=3] [ref=e388]:
+              - img [ref=e389]
+              - generic [ref=e391]: Quick Actions
+            - generic [ref=e393]:
+              - button "Manage Biometrics" [ref=e394] [cursor=pointer]:
+                - img [ref=e395] [cursor=pointer]
+                - generic [ref=e404] [cursor=pointer]: Manage Biometrics
+              - button "Security Settings" [ref=e405] [cursor=pointer]:
+                - img [ref=e406] [cursor=pointer]
+                - generic [ref=e408] [cursor=pointer]: Security Settings
+              - button "Preferences" [ref=e409] [cursor=pointer]:
+                - img [ref=e410] [cursor=pointer]
+                - generic [ref=e413] [cursor=pointer]: Preferences
+        - generic [ref=e414]:
+          - heading "🔧 Diagnostic Panel" [level=3] [ref=e415]
+          - generic [ref=e416]:
+            - generic [ref=e417]: "✅ Backend: 200"
+            - generic [ref=e418]:
+              - generic [ref=e419]: "📊 Cases Response Type: Array"
+              - generic [ref=e420]: "📋 Cases Count: 3"
+            - generic [ref=e421]:
+              - generic [ref=e422]: "🌐 Current URL: /dashboard"
+              - generic [ref=e423]: "⚛️ React Router: Browser mode"
+```

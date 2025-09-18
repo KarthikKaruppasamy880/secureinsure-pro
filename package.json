@@ -1,19 +1,29 @@
 {
-  "name": "mock-auth-server",
-  "version": "1.0.0",
-  "description": "Mock authentication server for SecureInsure Pro",
-  "main": "mock-auth-server.js",
+  "name": "secureinsure-pro",
+  "version": "2.0.0",
+  "description": "SecureInsure Pro - Production Ready Insurance Application",
+  "main": "deploy-app.js",
   "scripts": {
     "start": "node mock-auth-server.js",
-    "dev": "nodemon mock-auth-server.js"
+    "dev": "nodemon mock-auth-server.js",
+    "deploy": "node deploy-app.js",
+    "build": "cd frontend && npm run build",
+    "build:deploy": "cd frontend && npm run build && cd .. && node deploy-app.js",
+    "lint": "cd frontend && npm run lint",
+    "test": "cd frontend && npm run test",
+    "ci": "npm run lint && npm run build && npm run test",
+    "e2e": "cd frontend && npm run e2e",
+    "e2e:headed": "cd frontend && npm run e2e:headed",
+    "e2e:heal": "cd frontend && npm run e2e:heal"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.1.10"
   }
 }

@@ -329,10 +329,10 @@ const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
                 Voice Commands
               </h4>
               <div className="grid grid-cols-2 gap-2 text-xs text-blue-800 dark:text-blue-200">
-                <div>• "Next" or "Continue"</div>
-                <div>• "Previous" or "Back"</div>
-                <div>• "Save" or "Submit"</div>
-                <div>• "Clear" or "Reset"</div>
+                <div>• &quot;Next&quot; or &quot;Continue&quot;</div>
+                <div>• &quot;Previous&quot; or &quot;Back&quot;</div>
+                <div>• &quot;Save&quot; or &quot;Submit&quot;</div>
+                <div>• &quot;Clear&quot; or &quot;Reset&quot;</div>
               </div>
             </div>
           </div>

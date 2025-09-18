@@ -1,461 +1,407 @@
-import { toast } from 'sonner';
+import api from './api';
 
-// API Configuration
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
-const NOTIFICATION_API_URL = `${API_BASE_URL}/api/v1/notifications`;
-
-// Types
 export interface NotificationRequest {
-  type: 'email' | 'sms';
   recipient: string;
-  subject?: string;
   message: string;
-  template?: string;
-  priority?: 'low' | 'normal' | 'high';
-  scheduledFor?: string;
-  metadata?: Record<string, any>;
+  type: 'email' | 'sms' | 'push' | 'in-app';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  category: 'policy' | 'claim' | 'payment' | 'security' | 'system' | 'reminder';
+  metadata?: {
+    userId?: string;
+    caseId?: string;
+    policyNumber?: string;
+    claimNumber?: string;
+    actionUrl?: string;
+    alertType?: string;
+  };
 }
 
 export interface NotificationResponse {
   success: boolean;
-  message: string;
   data?: {
     id: string;
     status: string;
-    messageId?: string;
-    cost?: number;
+    deliveredAt?: string;
   };
   error?: string;
 }
 
-export interface NotificationHistory {
+export interface NotificationStats {
+  total: number;
+  unread: number;
+  urgent: number;
+  acknowledged: number;
+  pending: number;
+  resolved: number;
+  byType: Record<string, number>;
+  byCategory: Record<string, number>;
+}
+
+export interface WebSocketNotification {
   id: string;
-  type: 'email' | 'sms';
-  recipient: string;
-  subject?: string;
-  message: string;
-  template?: string;
-  status: 'pending' | 'sent' | 'failed' | 'delivered';
-  createdAt: string;
-  sentAt?: string;
-  deliveredAt?: string;
-  error?: string;
-  metadata?: {
-    provider?: string;
-    messageId?: string;
-    cost?: number;
-    retryCount?: number;
-  };
+  type: 'notification' | 'update' | 'delete';
+  data: any;
+  timestamp: string;
 }
 
-export interface NotificationTemplate {
-  id: string;
-  name: string;
-  type: 'email' | 'sms';
-  subject?: string;
-  content: string;
-  variables: string[];
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+class NotificationService {
+  private websocket: WebSocket | null = null;
+  private listeners: Map<string, Function[]> = new Map();
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
 
-export interface TemplateRequest {
-  name: string;
-  type: 'email' | 'sms';
-  subject?: string;
-  content: string;
-  variables: string[];
-  isDefault: boolean;
-}
-
-// Utility functions
-const maskPII = (text: string, type: 'email' | 'sms'): string => {
-  if (type === 'email') {
-    const [username, domain] = text.split('@');
-    if (username.length <= 1) return text;
-    return `${username.charAt(0)}***@${domain}`;
-  } else {
-    // Phone number masking: +1234567890 -> +123***7890
-    if (text.length < 7) return text;
-    return text.replace(/(\+\d{3})\d{3}(\d{4})/, '$1***$2');
-  }
-};
-
-const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-const validatePhone = (phone: string): boolean => {
-  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
-  return phoneRegex.test(phone);
-};
-
-const validateNotificationRequest = (request: NotificationRequest): string[] => {
-  const errors: string[] = [];
-
-  if (!request.recipient.trim()) {
-    errors.push('Recipient is required');
-  } else if (request.type === 'email' && !validateEmail(request.recipient)) {
-    errors.push('Invalid email address format');
-  } else if (request.type === 'sms' && !validatePhone(request.recipient)) {
-    errors.push('Invalid phone number format');
+  constructor() {
+    this.initializeWebSocket();
   }
 
-  if (!request.message.trim()) {
-    errors.push('Message is required');
-  }
-
-  if (request.type === 'email' && !request.subject?.trim()) {
-    errors.push('Subject is required for email notifications');
-  }
-
-  if (request.type === 'sms' && request.message.length > 160) {
-    errors.push('SMS message cannot exceed 160 characters');
-  }
-
-  return errors;
-};
-
-// API helper function
-const makeRequest = async <T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> => {
-  const url = `${NOTIFICATION_API_URL}${endpoint}`;
-  
-  const defaultOptions: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  };
-
-  try {
-    const response = await fetch(url, defaultOptions);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error(`API request failed for ${endpoint}:`, error);
-    throw error;
-  }
-};
-
-// Main notification service
-export const notificationService = {
-  // Send email notification
-  async sendEmail(request: Omit<NotificationRequest, 'type'>): Promise<NotificationResponse> {
+  // WebSocket Management
+  private initializeWebSocket() {
     try {
-      const notificationRequest: NotificationRequest = {
-        ...request,
-        type: 'email'
+      const wsUrl = `${import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8081'}/notifications`;
+      this.websocket = new WebSocket(wsUrl);
+
+      this.websocket.onopen = () => {
+        console.log('Notification WebSocket connected');
+        this.reconnectAttempts = 0;
+        this.emit('connected', null);
       };
 
-      const errors = validateNotificationRequest(notificationRequest);
-      if (errors.length > 0) {
-        throw new Error(errors.join(', '));
-      }
-
-      const response = await makeRequest<NotificationResponse>('/email', {
-        method: 'POST',
-        body: JSON.stringify(notificationRequest),
-      });
-
-      if (response.success) {
-        toast.success('Email sent successfully!');
-      } else {
-        toast.error(`Email failed: ${response.error || 'Unknown error'}`);
-      }
-
-      return response;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send email';
-      toast.error(`Email error: ${errorMessage}`);
-      throw error;
-    }
-  },
-
-  // Send SMS notification
-  async sendSms(request: Omit<NotificationRequest, 'type'>): Promise<NotificationResponse> {
-    try {
-      const notificationRequest: NotificationRequest = {
-        ...request,
-        type: 'sms'
+      this.websocket.onmessage = (event) => {
+        try {
+          const notification: WebSocketNotification = JSON.parse(event.data);
+          this.emit('notification', notification);
+        } catch (error) {
+          console.error('Error parsing notification:', error);
+        }
       };
 
-      const errors = validateNotificationRequest(notificationRequest);
-      if (errors.length > 0) {
-        throw new Error(errors.join(', '));
-      }
+      this.websocket.onclose = () => {
+        console.log('Notification WebSocket disconnected');
+        this.emit('disconnected', null);
+        this.handleReconnect();
+      };
 
-      const response = await makeRequest<NotificationResponse>('/sms', {
-        method: 'POST',
-        body: JSON.stringify(notificationRequest),
+      this.websocket.onerror = (error) => {
+        console.error('Notification WebSocket error:', error);
+        this.emit('error', error);
+      };
+
+    } catch (error) {
+      console.error('Failed to initialize WebSocket:', error);
+    }
+  }
+
+  private handleReconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      const delay = Math.pow(2, this.reconnectAttempts) * 1000; // Exponential backoff
+      
+      setTimeout(() => {
+        console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+        this.initializeWebSocket();
+      }, delay);
+    }
+  }
+
+  // Event Management
+  on(event: string, callback: Function) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, []);
+    }
+    this.listeners.get(event)!.push(callback);
+  }
+
+  off(event: string, callback: Function) {
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners) {
+      const index = eventListeners.indexOf(callback);
+      if (index > -1) {
+        eventListeners.splice(index, 1);
+      }
+    }
+  }
+
+  private emit(event: string, data: any) {
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners) {
+      eventListeners.forEach(callback => callback(data));
+    }
+  }
+
+  // API Methods
+  async getNotifications(page = 0, size = 20): Promise<any> {
+    try {
+      const response = await api.get('/notifications', {
+        params: {
+          page,
+          size,
+          sort: 'createdAt,desc'
+        }
       });
-
-      if (response.success) {
-        toast.success('SMS sent successfully!');
-      } else {
-        toast.error(`SMS failed: ${response.error || 'Unknown error'}`);
-      }
-
       return response;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send SMS';
-      toast.error(`SMS error: ${errorMessage}`);
+      console.error('Error fetching notifications:', error);
       throw error;
     }
-  },
+  }
 
-  // Send notification (auto-detect type)
-  async sendNotification(request: NotificationRequest): Promise<NotificationResponse> {
-    if (request.type === 'email') {
-      return this.sendEmail(request);
-    } else {
-      return this.sendSms(request);
-    }
-  },
-
-  // Get notification history
-  async getNotificationHistory(
-    filters?: {
-      type?: 'email' | 'sms';
-      status?: string;
-      startDate?: string;
-      endDate?: string;
-      limit?: number;
-      offset?: number;
-    }
-  ): Promise<NotificationHistory[]> {
+  async getNotificationById(id: string): Promise<any> {
     try {
-      const queryParams = new URLSearchParams();
-      
-      if (filters?.type) queryParams.append('type', filters.type);
-      if (filters?.status) queryParams.append('status', filters.status);
-      if (filters?.startDate) queryParams.append('startDate', filters.startDate);
-      if (filters?.endDate) queryParams.append('endDate', filters.endDate);
-      if (filters?.limit) queryParams.append('limit', filters.limit.toString());
-      if (filters?.offset) queryParams.append('offset', filters.offset.toString());
-
-      const endpoint = queryParams.toString() ? `?${queryParams.toString()}` : '';
-      const response = await makeRequest<{ data: NotificationHistory[] }>(endpoint);
-
-      // Mask PII in the response
-      return response.data.map(notification => ({
-        ...notification,
-        recipient: maskPII(notification.recipient, notification.type)
-      }));
+      const response = await api.get(`/notifications/${id}`);
+      return response;
     } catch (error) {
-      console.error('Failed to fetch notification history:', error);
-      toast.error('Failed to load notification history');
+      console.error('Error fetching notification:', error);
       throw error;
     }
-  },
+  }
 
-  // Get specific notification by ID
-  async getNotification(id: string): Promise<NotificationHistory | null> {
+  async createNotification(request: NotificationRequest): Promise<NotificationResponse> {
     try {
-      const response = await makeRequest<{ data: NotificationHistory }>(`/${id}`);
-      
-      // Mask PII in the response
-      const notification = response.data;
+      const response = await api.post('/notifications', request);
       return {
-        ...notification,
-        recipient: maskPII(notification.recipient, notification.type)
+        success: true,
+        data: {
+          id: response.data?.id || 'unknown',
+          status: 'sent',
+          deliveredAt: new Date().toISOString()
+        }
+      };
+    } catch (error: any) {
+      console.error('Error creating notification:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to create notification'
+      };
+    }
+  }
+
+  async markAsRead(notificationId: string): Promise<NotificationResponse> {
+    try {
+      await api.put(`/notifications/${notificationId}/read`);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error marking notification as read:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to mark as read'
+      };
+    }
+  }
+
+  async markAsAcknowledged(notificationId: string): Promise<NotificationResponse> {
+    try {
+      await api.put(`/notifications/${notificationId}/acknowledge`);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error acknowledging notification:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to acknowledge'
+      };
+    }
+  }
+
+  async markAllAsRead(userId?: string): Promise<NotificationResponse> {
+    try {
+      const endpoint = userId ? `/notifications/users/${userId}/read-all` : '/notifications/read-all';
+      await api.put(endpoint);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error marking all as read:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to mark all as read'
+      };
+    }
+  }
+
+  async deleteNotification(notificationId: string): Promise<NotificationResponse> {
+    try {
+      await api.delete(`/notifications/${notificationId}`);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error deleting notification:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to delete notification'
+      };
+    }
+  }
+
+  async getUnreadNotifications(userId?: string): Promise<any> {
+    try {
+      const endpoint = userId ? `/notifications/users/${userId}/unread` : '/notifications/unread';
+      const response = await api.get(endpoint);
+      return response;
+    } catch (error) {
+      console.error('Error fetching unread notifications:', error);
+      throw error;
+    }
+  }
+
+  async getNotificationStats(userId?: string): Promise<NotificationStats> {
+    try {
+      const endpoint = userId ? `/notifications/users/${userId}/stats` : '/notifications/stats';
+      const response = await api.get(endpoint);
+      return {
+        total: response.data?.total || 0,
+        unread: response.data?.unread || 0,
+        urgent: response.data?.urgent || 0,
+        acknowledged: response.data?.acknowledged || 0,
+        pending: response.data?.pending || 0,
+        resolved: response.data?.resolved || 0,
+        byType: response.data?.byType || {},
+        byCategory: response.data?.byCategory || {}
       };
     } catch (error) {
-      console.error(`Failed to fetch notification ${id}:`, error);
-      toast.error('Failed to load notification details');
-      throw error;
+      console.error('Error fetching notification stats:', error);
+      return {
+        total: 0,
+        unread: 0,
+        urgent: 0,
+        acknowledged: 0,
+        pending: 0,
+        resolved: 0,
+        byType: {},
+        byCategory: {}
+      };
     }
-  },
+  }
 
-  // Get notification templates
-  async getNotificationTemplates(): Promise<NotificationTemplate[]> {
+  async updatePreferences(preferences: any): Promise<NotificationResponse> {
     try {
-      const response = await makeRequest<{ data: NotificationTemplate[] }>('/templates');
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch notification templates:', error);
-      toast.error('Failed to load notification templates');
-      throw error;
+      await api.put('/notifications/preferences', preferences);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Error updating preferences:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update preferences'
+      };
     }
-  },
+  }
 
-  // Create new template
-  async createTemplate(template: TemplateRequest): Promise<NotificationTemplate> {
+  async getPreferences(): Promise<any> {
     try {
-      const response = await makeRequest<{ data: NotificationTemplate }>('/templates', {
-        method: 'POST',
-        body: JSON.stringify(template),
-      });
-
-      toast.success('Template created successfully!');
-      return response.data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create template';
-      toast.error(`Template creation failed: ${errorMessage}`);
-      throw error;
-    }
-  },
-
-  // Update existing template
-  async updateTemplate(id: string, template: Partial<TemplateRequest>): Promise<NotificationTemplate> {
-    try {
-      const response = await makeRequest<{ data: NotificationTemplate }>(`/templates/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(template),
-      });
-
-      toast.success('Template updated successfully!');
-      return response.data;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update template';
-      toast.error(`Template update failed: ${errorMessage}`);
-      throw error;
-    }
-  },
-
-  // Delete template
-  async deleteTemplate(id: string): Promise<void> {
-    try {
-      await makeRequest(`/templates/${id}`, {
-        method: 'DELETE',
-      });
-
-      toast.success('Template deleted successfully!');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete template';
-      toast.error(`Template deletion failed: ${errorMessage}`);
-      throw error;
-    }
-  },
-
-  // Process webhook from notification providers
-  async processWebhook(provider: string, payload: any): Promise<void> {
-    try {
-      await makeRequest(`/webhook/${provider}`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-    } catch (error) {
-      console.error(`Failed to process webhook from ${provider}:`, error);
-      throw error;
-    }
-  },
-
-  // Get notification statistics
-  async getNotificationStats(
-    period: 'day' | 'week' | 'month' | 'year' = 'month'
-  ): Promise<{
-    total: number;
-    sent: number;
-    delivered: number;
-    failed: number;
-    pending: number;
-    cost: number;
-  }> {
-    try {
-      const response = await makeRequest<{ data: any }>(`/stats?period=${period}`);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch notification statistics:', error);
-      throw error;
-    }
-  },
-
-  // Retry failed notification
-  async retryNotification(id: string): Promise<NotificationResponse> {
-    try {
-      const response = await makeRequest<NotificationResponse>(`/${id}/retry`, {
-        method: 'POST',
-      });
-
-      if (response.success) {
-        toast.success('Notification retry initiated successfully!');
-      } else {
-        toast.error(`Retry failed: ${response.error || 'Unknown error'}`);
-      }
-
+      const response = await api.get('/notifications/preferences');
       return response;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to retry notification';
-      toast.error(`Retry error: ${errorMessage}`);
-      throw error;
+      console.error('Error fetching preferences:', error);
+      return null;
     }
-  },
+  }
 
-  // Cancel pending notification
-  async cancelNotification(id: string): Promise<void> {
+  async searchNotifications(filters: any, page = 0, size = 20): Promise<any> {
     try {
-      await makeRequest(`/${id}/cancel`, {
-        method: 'POST',
+      const response = await api.get('/notifications/search', {
+        params: {
+          ...filters,
+          page,
+          size
+        }
       });
-
-      toast.success('Notification cancelled successfully!');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to cancel notification';
-      toast.error(`Cancellation error: ${errorMessage}`);
-      throw error;
-    }
-  },
-
-  // Bulk send notifications
-  async bulkSend(notifications: Omit<NotificationRequest, 'type'>[]): Promise<{
-    success: number;
-    failed: number;
-    results: Array<{ success: boolean; recipient: string; error?: string }>;
-  }> {
-    try {
-      const response = await makeRequest<{
-        success: number;
-        failed: number;
-        results: Array<{ success: boolean; recipient: string; error?: string }>;
-      }>('/bulk', {
-        method: 'POST',
-        body: JSON.stringify({ notifications }),
-      });
-
-      const total = response.success + response.failed;
-      if (response.success > 0) {
-        toast.success(`Successfully sent ${response.success} out of ${total} notifications`);
-      }
-      if (response.failed > 0) {
-        toast.error(`Failed to send ${response.failed} out of ${total} notifications`);
-      }
-
       return response;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send bulk notifications';
-      toast.error(`Bulk send error: ${errorMessage}`);
+      console.error('Error searching notifications:', error);
       throw error;
     }
-  },
+  }
 
-  // Health check
-  async healthCheck(): Promise<{ status: string; timestamp: string }> {
-    try {
-      const response = await makeRequest<{ status: string; timestamp: string }>('/health');
-      return response;
-    } catch (error) {
-      console.error('Notification service health check failed:', error);
-      throw error;
+  // Predefined notification types
+  async sendWelcomeNotification(userId: string, email: string, firstName: string): Promise<NotificationResponse> {
+    return this.createNotification({
+      recipient: email,
+      message: `Welcome ${firstName}! Your account has been successfully created.`,
+      type: 'email',
+      priority: 'medium',
+      category: 'system',
+      metadata: { userId }
+    });
+  }
+
+  async sendPolicyRenewalReminder(userId: string, email: string, policyNumber: string, renewalDate: string): Promise<NotificationResponse> {
+    return this.createNotification({
+      recipient: email,
+      message: `Your policy ${policyNumber} is due for renewal on ${renewalDate}.`,
+      type: 'email',
+      priority: 'medium',
+      category: 'policy',
+      metadata: { userId, policyNumber }
+    });
+  }
+
+  async sendClaimStatusUpdate(userId: string, email: string, claimNumber: string, status: string): Promise<NotificationResponse> {
+    return this.createNotification({
+      recipient: email,
+      message: `Your claim ${claimNumber} status has been updated to: ${status}.`,
+      type: 'email',
+      priority: 'high',
+      category: 'claim',
+      metadata: { userId, claimNumber }
+    });
+  }
+
+  async sendPaymentReminder(userId: string, email: string, policyNumber: string, amount: string, dueDate: string): Promise<NotificationResponse> {
+    return this.createNotification({
+      recipient: email,
+      message: `Payment of ${amount} for policy ${policyNumber} is due on ${dueDate}.`,
+      type: 'email',
+      priority: 'urgent',
+      category: 'payment',
+      metadata: { userId, policyNumber, alertType: 'payment_due' }
+    });
+  }
+
+  async sendSecurityAlert(userId: string, email: string, alertType: string, description: string): Promise<NotificationResponse> {
+    return this.createNotification({
+      recipient: email,
+      message: `Security Alert: ${alertType} - ${description}`,
+      type: 'email',
+      priority: 'urgent',
+      category: 'security',
+      metadata: { userId, alertType }
+    });
+  }
+
+  // Browser Push Notifications
+  async requestPermission(): Promise<boolean> {
+    if (!('Notification' in window)) {
+      console.warn('This browser does not support notifications');
+      return false;
     }
-  },
 
-  // Utility functions
-  maskPII,
-  validateEmail,
-  validatePhone,
-  validateNotificationRequest,
-};
+    if (Notification.permission === 'granted') {
+      return true;
+    }
 
-// Export default instance
-export default notificationService; 
+    if (Notification.permission === 'denied') {
+      return false;
+    }
+
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+
+  async showBrowserNotification(title: string, options?: NotificationOptions): Promise<void> {
+    const hasPermission = await this.requestPermission();
+    
+    if (hasPermission) {
+      new Notification(title, {
+        icon: '/favicon.ico',
+        badge: '/logo192.png',
+        ...options
+      });
+    }
+  }
+
+  // Cleanup
+  disconnect() {
+    if (this.websocket) {
+      this.websocket.close();
+      this.websocket = null;
+    }
+    this.listeners.clear();
+  }
+}
+
+export const notificationService = new NotificationService();

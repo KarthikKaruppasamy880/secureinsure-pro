@@ -26,7 +26,7 @@ Object.defineProperty(navigator, 'onLine', {
 Object.defineProperty(window, 'location', {
   writable: true,
   value: {
-    href: 'http://localhost:3000/test',
+    href: 'http://localhost:8081/test',
   },
 });
 
@@ -109,7 +109,7 @@ describe('ErrorHandler', () => {
       errorHandler.handleApiError(error, 'Test API');
 
       expect(consoleSpy.error).toHaveBeenCalled();
-      expect(localStorageMock.setItem).toHaveCalled();
+      expect(localStorageMock.setItem).toHaveBeenCalled();
     });
 
     it('handles standard Error object', () => {
@@ -156,7 +156,7 @@ describe('ErrorHandler', () => {
 
   describe('handleNetworkError', () => {
     it('handles network error when online', () => {
-      navigator.onLine = true;
+      (navigator as { onLine: boolean }).onLine = true;
       const error = new Error('Network error');
 
       errorHandler.handleNetworkError(error, 'API call');
@@ -166,7 +166,7 @@ describe('ErrorHandler', () => {
     });
 
     it('handles network error when offline', () => {
-      navigator.onLine = false;
+      (navigator as { onLine: boolean }).onLine = false;
       const error = new Error('Network error');
 
       errorHandler.handleNetworkError(error, 'API call');

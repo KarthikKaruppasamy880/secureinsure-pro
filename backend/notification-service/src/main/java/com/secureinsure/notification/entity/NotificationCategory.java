@@ -12,6 +12,7 @@ public enum NotificationCategory {
     REMINDER("Reminder"),
     ALERT("Alert"),
     INFO("Information"),
+    GENERAL("General"),
     CUSTOM("Custom");
 
     private final String displayName;

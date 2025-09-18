@@ -2,6 +2,7 @@ package com.secureinsure.claims.entity;
 
 public enum ClaimStatus {
     DRAFT("Draft"),
+    PENDING("Pending"),
     SUBMITTED("Submitted"),
     UNDER_REVIEW("Under Review"),
     INVESTIGATION("Investigation"),

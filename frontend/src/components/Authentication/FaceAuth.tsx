@@ -52,6 +52,11 @@ export const FaceAuth: React.FC<FaceAuthProps> = ({ onSuccess, onFailure, onCanc
 
   const loadDevices = async () => {
     try {
+      if (!navigator.mediaDevices?.enumerateDevices) {
+        toast.error('Camera access not supported in this browser');
+        return;
+      }
+      
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices
         .filter(device => device.kind === 'videoinput')
@@ -71,6 +76,11 @@ export const FaceAuth: React.FC<FaceAuthProps> = ({ onSuccess, onFailure, onCanc
 
   const startCamera = async () => {
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        toast.error('Camera access not supported in this browser');
+        return;
+      }
+      
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }

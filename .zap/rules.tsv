@@ -1,0 +1,5 @@
+# ruleId	threshold	action
+# Lower certain alerts or ignore noise. Example:
+# 10054	IGNORE	IGNORE
+
+

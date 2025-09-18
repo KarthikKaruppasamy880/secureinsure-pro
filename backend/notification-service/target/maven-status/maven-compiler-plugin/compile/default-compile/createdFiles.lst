@@ -1,0 +1,13 @@
+com\secureinsure\notification\logging\ServerRuntimeLogger.class
+com\secureinsure\notification\repository\NotificationRepository.class
+com\secureinsure\notification\entity\DeliveryMethod.class
+com\secureinsure\notification\entity\NotificationCategory.class
+com\secureinsure\notification\entity\NotificationStatus.class
+com\secureinsure\notification\entity\Notification.class
+com\secureinsure\notification\entity\Notification$NotificationBuilder.class
+com\secureinsure\notification\entity\NotificationType.class
+com\secureinsure\notification\dto\NotificationDto.class
+com\secureinsure\notification\service\NotificationService.class
+com\secureinsure\notification\dto\NotificationDto$NotificationDtoBuilder.class
+com\secureinsure\notification\entity\PriorityLevel.class
+com\secureinsure\notification\NotificationApplication.class

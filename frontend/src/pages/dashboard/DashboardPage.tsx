@@ -13,8 +13,10 @@ import {
   TrashIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
+import { Upload } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { useAuth } from '../../contexts/AuthContext';
-import { useSocket } from '../../contexts/SocketContext';
+// import { useSocket } from '../../contexts/SocketContext';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
@@ -25,8 +27,16 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '../../components/ui/dropdown-menu';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import HealthCheck from '../../components/health/HealthCheck';
+import BiometricDemo from '../../components/dashboard/BiometricDemo';
+import { VoiceSearch } from '../../components/voice/VoiceSearch';
+import TX1ImportModal from '../../components/dashboard/TX1ImportModal';
+import CaseRow from '../../screens/Dashboard/CaseRow';
+import { useContext } from 'react';
+import { SocketContext } from '../../contexts/SocketContext';
+import { api } from '../../lib/api';
+import DiagnosticPanel from '../../components/DiagnosticPanel';
 
 interface DashboardStats {
   totalPolicies: number;
@@ -57,8 +67,10 @@ interface CaseData {
 
 const DashboardPage: React.FC = () => {
   const { state } = useAuth();
-  const { isConnected } = useSocket();
+  const socket = useContext(SocketContext);
+  const isConnected = socket?.readyState === WebSocket.OPEN;
   const navigate = useNavigate();
+  const [q,setQ] = useState('');
   const [stats, setStats] = useState<DashboardStats>({
     totalPolicies: 0,
     activePolicies: 0,
@@ -73,9 +85,36 @@ const DashboardPage: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showTX1Import, setShowTX1Import] = useState(false);
 
-  // Mock case data - in real app this would come from API
-  const [cases, setCases] = useState<CaseData[]>([
+  // Real case data from API
+  const [cases, setCases] = useState<CaseData[]>([]);
+  const [casesLoading, setCasesLoading] = useState(true);
+
+  // Load cases from API
+  useEffect(() => {
+    const loadCases = async () => {
+      try {
+        setCasesLoading(true);
+        const response = await api.get('/api/v1/cases');
+        // Handle both array response and object with data property
+        const apiCases = Array.isArray(response.data) ? response.data : (response.data.data || []);
+        setCases(apiCases);
+        console.log('Loaded cases:', apiCases);
+      } catch (error) {
+        console.error('Failed to load cases:', error);
+        // Fallback to empty array
+        setCases([]);
+      } finally {
+        setCasesLoading(false);
+      }
+    };
+    loadCases();
+  }, []);
+
+  // Mock data for reference (commented out)
+  /*
+  const mockCases: CaseData[] = [
     {
       id: '1',
       caseId: 'CS-2024-001',
@@ -128,7 +167,8 @@ const DashboardPage: React.FC = () => {
       lastUpdated: '2024-01-15T13:15:00Z',
       priority: 'urgent'
     }
-  ]);
+  ];
+  */
 
   useEffect(() => {
     // Simulate loading dashboard data
@@ -253,12 +293,19 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleCaseAction = (action: string, caseId: string) => {
+    // Find the case to get the actual caseId (not internal id)
+    const caseItem = cases.find(c => c.id === caseId);
+    if (!caseItem?.caseId) {
+      console.warn('Missing caseId for case', caseId);
+      return;
+    }
+
     switch (action) {
       case 'view':
-        navigate(`/application/${caseId}`);
+        navigate(`/application/${encodeURIComponent(caseItem.caseId)}`);
         break;
       case 'edit':
-        navigate(`/application/${caseId}?edit=true`);
+        navigate(`/application/${encodeURIComponent(caseItem.caseId)}?mode=edit`);
         break;
       case 'delete':
         if (window.confirm('Are you sure you want to delete this case?')) {
@@ -271,7 +318,81 @@ const DashboardPage: React.FC = () => {
   };
 
   const handleCreateCase = () => {
-    navigate('/application');
+    navigate('/create-case');
+  };
+
+  const VOICE_ENABLED = String((import.meta as any).env?.VITE_VOICE_ENABLED ?? '').toLowerCase() === 'true';
+  const VOICE_DEBUG = String((import.meta as any).env?.VITE_VOICE_DEBUG ?? '').toLowerCase() === 'true';
+  const SUPPORT_OK = (typeof (window as any).SpeechRecognition !== 'undefined' || typeof (window as any).webkitSpeechRecognition !== 'undefined')
+    && !!navigator.mediaDevices?.getUserMedia;
+
+  // Debug voice configuration
+  console.log('Voice Configuration:', {
+    VOICE_ENABLED,
+    VOICE_DEBUG,
+    SUPPORT_OK,
+    env: (import.meta as any).env?.VITE_VOICE_ENABLED
+  });
+
+  const handleVoiceFilters = (filters: any) => {
+    if (filters.insured) setSearchTerm(filters.insured);
+    if (filters.caseStatus) setStatusFilter(filters.caseStatus);
+    if (filters.priority) setPriorityFilter(filters.priority);
+    if (filters.appDate) {
+      // Handle date range filtering
+      const today = new Date();
+      switch (filters.appDate) {
+        case 'last_week':
+          // Set date filter for last week
+          break;
+        case 'last_month':
+          // Set date filter for last month
+          break;
+        case 'this_week':
+          // Set date filter for this week
+          break;
+        case 'yesterday':
+          // Set date filter for yesterday
+          break;
+      }
+    }
+    if (filters.faceAmount) {
+      // Handle face amount filtering
+      console.log('Filtering by face amount:', filters.faceAmount);
+    }
+  };
+
+  const handleVoiceCommand = (command: string) => {
+    console.log('Voice command received:', command);
+    
+    // Handle navigation commands
+    if (command.startsWith('navigate_to_case:')) {
+      const caseId = command.split(':')[1];
+      if (caseId) {
+        navigate(`/application/${encodeURIComponent(caseId)}`);
+        toast.success(`Navigating to case: ${caseId}`);
+      }
+    }
+    
+    // Handle other voice commands
+    if (command.includes('help') || command.includes('what can you do')) {
+      toast('Voice commands help available. Say "help" to the voice assistant for a full list.', { 
+        icon: 'ℹ️',
+        style: { background: '#3b82f6', color: 'white' }
+      });
+    }
+  };
+
+  // Voice search fallback function
+  const onVoiceSearchFallback = async () => {
+    if (!searchTerm) return;
+    try {
+      await api.get('/api/search', { params: { q: searchTerm } });
+      toast.success(`Searching for: ${searchTerm}`);
+    } catch (error) {
+      console.warn('Voice search fallback failed:', error);
+      toast.error('Search failed, please try again');
+    }
   };
 
   return (
@@ -292,12 +413,36 @@ const DashboardPage: React.FC = () => {
             <span className="text-sm text-gray-500 dark:text-gray-400">
               {isConnected ? 'Live' : 'Offline'}
             </span>
+            {import.meta.env.DEV && VOICE_ENABLED && (
+              <span className="ml-2 px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">Voice ON</span>
+            )}
           </div>
         </div>
       </div>
 
       {/* PHASE 0: Health Check Component */}
       <HealthCheck />
+
+      {/* Voice Assistant (always visible in local mode) */}
+      <section aria-label="Voice Search & Assistant">
+        <Card className="card-premium">
+          <CardHeader>
+            <CardTitle>Voice Search & Assistant</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <VoiceSearch
+              onSearch={handleVoiceFilters}
+              onClearFilters={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setPriorityFilter('all');
+              }}
+              onVoiceCommand={handleVoiceCommand}
+              className="w-full"
+            />
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -371,10 +516,16 @@ const DashboardPage: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Active Cases</CardTitle>
-            <Button onClick={handleCreateCase} className="flex items-center gap-2">
-              <PlusIcon className="h-4 w-4" />
-              Create Case
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setShowTX1Import(true)} variant="outline" className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Import TX1
+              </Button>
+              <Button onClick={handleCreateCase} className="flex items-center gap-2">
+                <PlusIcon className="h-4 w-4" />
+                Create Case
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -388,6 +539,13 @@ const DashboardPage: React.FC = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
+            </div>
+            <div className="flex items-center gap-2">
+              <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search cases, insured names" className="border rounded px-2 py-1"/>
+              <button className="px-3 py-1 rounded border" onClick={()=>api.get('/api/search',{ params:{ q }})}>Search</button>
+              {import.meta.env.VITE_VOICE_ENABLED === 'true' && (
+                <span className="text-xs px-2 py-1 rounded bg-gray-100">Voice: {isConnected ? 'connected' : 'offline'}</span>
+              )}
             </div>
             
             <div className="flex gap-2">
@@ -452,14 +610,24 @@ const DashboardPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredAndSortedCases.map((caseItem) => (
-                  <tr key={caseItem.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4">
-                      <span className="font-medium text-blue-600 cursor-pointer hover:underline"
-                            onClick={() => handleCaseAction('view', caseItem.id)}>
-                        {caseItem.caseId}
-                      </span>
+                {casesLoading ? (
+                  <tr>
+                    <td colSpan={9} className="py-8 text-center text-gray-500">
+                      Loading cases...
                     </td>
+                  </tr>
+                ) : filteredAndSortedCases.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-8 text-center text-gray-500">
+                      No cases found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredAndSortedCases.map((caseItem) => (
+                    <tr key={caseItem.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        <CaseRow item={caseItem} />
+                      </td>
                     <td className="py-3 px-4">{caseItem.insuredName}</td>
                     <td className="py-3 px-4">{caseItem.productType}</td>
                     <td className="py-3 px-4">{getStatusBadge(caseItem.status)}</td>
@@ -497,7 +665,8 @@ const DashboardPage: React.FC = () => {
                       </DropdownMenu>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -570,6 +739,38 @@ const DashboardPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Biometric Demo Section */}
+      <BiometricDemo />
+
+      {/* TX1 Import Modal */}
+      <TX1ImportModal
+        isOpen={showTX1Import}
+        onClose={() => setShowTX1Import(false)}
+        onImportSuccess={(caseId, policyId) => {
+          // Add the new case to the list
+          const newCase: CaseData = {
+            id: Date.now().toString(),
+            caseId: caseId,
+            insuredName: 'Imported Case',
+            productType: 'Imported',
+            status: 'Under Review',
+            faceAmount: 0,
+            premium: 0,
+            agent: 'System Import',
+            createdAt: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+            priority: 'medium'
+          };
+          setCases(prev => [newCase, ...prev]);
+          setShowTX1Import(false);
+          toast.success(`TX1 imported successfully! New case ${caseId} created.`);
+          navigate(`/cases/${caseId}`);
+        }}
+      />
+      
+      {/* Diagnostic Panel - Remove this after debugging */}
+      {process.env.NODE_ENV === 'development' && <DiagnosticPanel />}
     </div>
   );
 };

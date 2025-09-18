@@ -224,7 +224,7 @@ export default function LoginForm({
 
           <div className="text-center">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Button
                 type="button"
                 variant="link"

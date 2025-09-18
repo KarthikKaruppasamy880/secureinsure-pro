@@ -61,11 +61,17 @@ public class SystemAuditDto {
     @Schema(description = "Request method", example = "POST")
     private String requestMethod;
 
+    @Schema(description = "Request parameters (JSON)")
+    private String requestParams;
+
     @Schema(description = "Response status", example = "200")
     private Integer responseStatus;
 
     @Schema(description = "Execution time in milliseconds", example = "150")
     private Long executionTimeMs;
+
+    @Schema(description = "Additional details (JSON)")
+    private String details;
 
     @Schema(description = "Success status", example = "true")
     private Boolean success;

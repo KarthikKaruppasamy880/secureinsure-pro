@@ -1,4 +1,4 @@
-import { VoiceSearchService, DashboardFilter } from '../voiceSearchService';
+import { VoiceSearchService } from '../voiceSearchService';
 import { SpeechAdapter } from '../speechAdapter';
 
 // Mock SpeechAdapter
@@ -74,7 +74,7 @@ describe('VoiceSearchService', () => {
 
       await voiceService.startListening();
 
-      expect(voiceService.getIsListening()).toBe(true);
+      expect(voiceService.getListeningStatus()).toBe(true);
       expect(onStatusChange).toHaveBeenCalledWith('listening');
     });
 
@@ -84,7 +84,7 @@ describe('VoiceSearchService', () => {
 
       voiceService.stopListening();
 
-      expect(voiceService.getIsListening()).toBe(false);
+      expect(voiceService.getListeningStatus()).toBe(false);
     });
 
     it('should handle speech recognition results', async () => {
@@ -213,7 +213,7 @@ describe('VoiceSearchService', () => {
     it('should generate appropriate search queries', () => {
       const { generateSearchQuery } = voiceService as any;
 
-      const filters: DashboardFilter = {
+      const filters = {
         caseId: 'CS-2024-001',
         caseStatus: 'Open',
         insured: 'John Smith'
@@ -229,7 +229,7 @@ describe('VoiceSearchService', () => {
     it('should fallback to original text when no filters', () => {
       const { generateSearchQuery } = voiceService as any;
 
-      const filters: DashboardFilter = {};
+      const filters = {};
       const originalText = 'show me something';
 
       const query = generateSearchQuery(filters, originalText);
@@ -277,13 +277,13 @@ describe('VoiceSearchService', () => {
 
   describe('Status Management', () => {
     it('should track listening status correctly', async () => {
-      expect(voiceService.getIsListening()).toBe(false);
+      expect(voiceService.getListeningStatus()).toBe(false);
 
       await voiceService.startListening();
-      expect(voiceService.getIsListening()).toBe(true);
+      expect(voiceService.getListeningStatus()).toBe(true);
 
       voiceService.stopListening();
-      expect(voiceService.getIsListening()).toBe(false);
+      expect(voiceService.getListeningStatus()).toBe(false);
     });
 
     it('should track current transcript', async () => {

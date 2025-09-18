@@ -352,7 +352,7 @@ export default function RoleManagement({
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Role</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete the role "{role.name}"? This action cannot be undone.
+                              Are you sure you want to delete the role &quot;{role.name}&quot;? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

@@ -7,7 +7,6 @@ import com.secureinsure.claims.entity.PriorityLevel;
 import com.secureinsure.claims.entity.RiskLevel;
 import com.secureinsure.claims.service.ClaimService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

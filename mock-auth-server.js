@@ -1,59 +1,199 @@
-// Mock Auth Server for SecureInsure Pro
+// Mock Auth Server for SecureInsure Pro - Fixed Version
 // This provides login functionality when the real auth service can't start due to SSL issues
 
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const http = require('http');
+const WebSocket = require('ws');
 
 const app = express();
-const PORT = 8081;
+const PORT = 8082;
 const JWT_SECRET = 'mock_secret_key_for_testing';
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// CORS configuration with environment variable support
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:5174', 
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+      'http://192.168.1.157:3000',
+      'http://192.168.1.157:5173',
+      'http://192.168.1.157:5174'
+    ];
+
+// Add LAN_ORIGIN support for dynamic CORS
+if (process.env.LAN_ORIGIN) {
+  allowedOrigins.push(process.env.LAN_ORIGIN);
+}
+
+// Dynamic CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (origin && origin.match(/^http:\/\/192\.168\.\d{1,3}\.\d{1,3}:(3000|5173|5174)$/)) {
+    // Allow any LAN IP on ports 3000, 5173, 5174
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Authorization, Content-Type, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Error handling middleware for JSON parsing
+app.use((error, req, res, next) => {
+  if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+    console.error('JSON parsing error:', error.message);
+    return res.status(400).json({
+      error: 'Invalid JSON',
+      message: 'Request body contains invalid JSON'
+    });
+  }
+  next();
+});
+
+// Mock cases database with proper structure
+const cases = [
+  {
+    id: '1',
+    caseId: 'CS-2024-001',
+    caseNumber: 'APP-2024-001',
+    insuredName: 'Jane Doe',
+    status: 'Under Review',
+    policyType: 'IUL',
+    coverageAmount: '$500,000',
+    faceAmount: 500000,
+    premium: 150.00,
+    agent: 'John Smith',
+    zinniaCaseId: 'ZC-001-2024',
+    templateId: 'template-1',
+    applicationDate: '2024-01-15',
+    createdAt: '2024-01-15T10:30:00Z',
+    lastUpdated: '2024-01-15T14:20:00Z',
+    priority: 'high',
+    formData: {
+      insured_name: 'Jane Doe',
+      insured_dob: '1985-03-15',
+      insured_ssn: '123-45-6789'
+    }
+  },
+  {
+    id: '2',
+    caseId: 'CS-2024-002',
+    caseNumber: 'APP-2024-002',
+    insuredName: 'Michael Johnson',
+    status: 'Pending Documents',
+    policyType: 'Term Life',
+    coverageAmount: '$250,000',
+    faceAmount: 250000,
+    premium: 75.00,
+    agent: 'Sarah Wilson',
+    zinniaCaseId: 'ZC-002-2024',
+    templateId: 'template-1',
+    applicationDate: '2024-01-14',
+    createdAt: '2024-01-14T09:15:00Z',
+    lastUpdated: '2024-01-15T11:45:00Z',
+    priority: 'medium',
+    formData: {
+      insured_name: 'Michael Johnson',
+      insured_dob: '1978-07-22',
+      insured_ssn: '987-65-4321'
+    }
+  }
+];
+
+// Mock applications database
+const applications = {
+  'CS-2024-001': {
+    caseId: 'CS-2024-001',
+    sections: {
+      insured: {
+        fields: {
+          fullName: 'Jane Doe',
+          dateOfBirth: '1985-03-15',
+          ssn: '123-45-6789',
+          address: '123 Main St, Anytown, USA',
+          phone: '(555) 123-4567',
+          email: 'jane.doe@email.com'
+        }
+      },
+      policy: {
+        fields: {
+          productCode: 'IUL',
+          faceAmount: 500000,
+          premium: 150.00,
+          policyNumber: 'POL-001-2024'
+        }
+      },
+      beneficiary: {
+        fields: {
+          primaryBeneficiary: 'John Doe (Spouse)',
+          relationship: 'Spouse',
+          percentage: '100%'
+        }
+      }
+    }
+  },
+  'CS-2024-002': {
+    caseId: 'CS-2024-002',
+    sections: {
+      insured: {
+        fields: {
+          fullName: 'Michael Johnson',
+          dateOfBirth: '1978-07-22',
+          ssn: '987-65-4321',
+          address: '456 Oak Ave, Somewhere, USA',
+          phone: '(555) 987-6543',
+          email: 'michael.johnson@email.com'
+        }
+      },
+      policy: {
+        fields: {
+          productCode: 'TERM',
+          faceAmount: 250000,
+          premium: 75.00,
+          policyNumber: 'POL-002-2024'
+        }
+      },
+      beneficiary: {
+        fields: {
+          primaryBeneficiary: 'Sarah Johnson (Spouse)',
+          relationship: 'Spouse',
+          percentage: '100%'
+        }
+      }
+    }
+  }
+};
 
 // Mock user database
 const users = [
     {
         id: 1,
-        username: 'admin_test',
-        email: 'admin_test@secureinsure.com',
-        password: '$2a$10$eygRE2lG7/nc5aQisfAR3u.8y.kNUxqzvngpkHrfMGibFzcGqvWhW', // Test@1234
+        username: 'admin',
+        email: 'admin@secureinsure.com',
+        password: 'admin123', // Plain text for testing
         firstName: 'Admin',
-        lastName: 'Test',
+        lastName: 'User',
         userType: 'ADMIN',
         roles: ['ADMIN', 'USER'],
         permissions: ['ALL_PERMISSIONS', 'USER_MANAGEMENT', 'SYSTEM_CONFIG'],
-        status: 'ACTIVE',
-        mfaEnabled: false,
-        biometricEnabled: false
-    },
-    {
-        id: 2,
-        username: 'underwriter1',
-        email: 'underwriter@secureinsure.com',
-        password: '$2a$10$7eqBHjDfzL9H2OKrGOXLluBrn85jQ1KPnBNw5E5zDpK7zV4j9.VhO', // SecurePass123!
-        firstName: 'John',
-        lastName: 'Underwriter',
-        userType: 'UNDERWRITER',
-        roles: ['UNDERWRITER', 'USER'],
-        permissions: ['REVIEW_POLICIES', 'APPROVE_POLICIES', 'VIEW_REPORTS'],
-        status: 'ACTIVE',
-        mfaEnabled: false,
-        biometricEnabled: false
-    },
-    {
-        id: 3,
-        username: 'customer1',
-        email: 'customer@secureinsure.com',
-        password: '$2a$10$7eqBHjDfzL9H2OKrGOXLluBrn85jQ1KPnBNw5E5zDpK7zV4j9.VhO', // CustomerPass123!
-        firstName: 'Bob',
-        lastName: 'Customer',
-        userType: 'CUSTOMER',
-        roles: ['USER'],
-        permissions: ['VIEW_OWN_POLICIES', 'SUBMIT_CLAIMS', 'VIEW_OWN_CLAIMS'],
         status: 'ACTIVE',
         mfaEnabled: false,
         biometricEnabled: false
@@ -74,71 +214,61 @@ function generateToken(user) {
     );
 }
 
-// Root endpoint
-app.get('/', (req, res) => {
-    res.json({
-        message: 'SecureInsure Pro Mock Auth Server',
-        status: 'RUNNING',
-        endpoints: {
-            health: '/actuator/health',
-            register: '/api/v1/auth/register',
-            login: '/api/v1/auth/login',
-            user: '/api/v1/auth/user'
-        }
+// Health endpoints
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok',
+        service: 'mock-backend',
+        ts: new Date().toISOString()
     });
 });
 
-// Health check endpoint
-app.get('/actuator/health', (req, res) => {
+// Face API endpoints
+app.get('/face-api/face/status', (req, res) => {
     res.json({
-        status: 'UP',
-        components: {
-            db: { status: 'UP' },
-            redis: { status: 'UP' }
-        }
+        status: 'available',
+        features: ['face_detection', 'face_recognition'],
+        version: '1.0.0'
     });
 });
 
-// Register endpoint
-app.post('/api/v1/auth/register', (req, res) => {
-    const { username, email, password, firstName, lastName, userType } = req.body;
-    
-    // Check if user already exists
-    const existingUser = users.find(u => u.username === username || u.email === email);
-    if (existingUser) {
-        return res.status(409).json({
-            timestamp: new Date().toISOString(),
-            status: 409,
-            error: 'Conflict',
-            message: 'User already exists',
-            path: '/api/v1/auth/register'
-        });
-    }
-    
-    // Create new user
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    const newUser = {
-        id: users.length + 1,
-        username,
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        userType: userType || 'CUSTOMER',
-        roles: userType === 'ADMIN' ? ['ADMIN', 'USER'] : 
-               userType === 'UNDERWRITER' ? ['UNDERWRITER', 'USER'] : ['USER'],
-        permissions: userType === 'ADMIN' ? ['ALL_PERMISSIONS'] : 
-                    userType === 'UNDERWRITER' ? ['REVIEW_POLICIES'] : ['VIEW_OWN_POLICIES'],
-        status: 'ACTIVE',
-        mfaEnabled: false,
-        biometricEnabled: false
-    };
-    
-    users.push(newUser);
-    
-    // Return user without password
-    const { password: _, ...userResponse } = newUser;
-    res.status(201).json(userResponse);
+// Voice API endpoints
+app.get('/voice-api/voice/status', (req, res) => {
+    res.json({
+        status: 'available',
+        features: ['speech_recognition', 'text_to_speech'],
+        version: '1.0.0'
+    });
+});
+
+// Auth validation endpoint
+app.get('/api/v1/auth/validate', (req, res) => {
+    res.json({ 
+        id: 'admin', 
+        name: 'Admin', 
+        email: 'admin@example.com', 
+        roles: ['ADMIN'], 
+        scopes: ['voice:use', 'policy:read'] 
+    });
+});
+
+// Auth logout (prevent 404 spam)
+app.post('/api/v1/auth/logout', (_req, res) => res.json({ ok: true }));
+
+app.get('/ready', (req, res) => {
+    res.json({
+        ready: true,
+        service: 'mock-backend',
+        ts: new Date().toISOString()
+    });
+});
+
+app.get('/version', (req, res) => {
+    res.json({
+        version: process.env.VERSION || 'dev',
+        service: 'mock-backend',
+        ts: new Date().toISOString()
+    });
 });
 
 // Login endpoint
@@ -157,8 +287,8 @@ app.post('/api/v1/auth/login', (req, res) => {
         });
     }
     
-    // Check password
-    const isValidPassword = bcrypt.compareSync(password, user.password);
+    // Check password (simple comparison for testing)
+    const isValidPassword = password === user.password;
     if (!isValidPassword) {
         return res.status(401).json({
             timestamp: new Date().toISOString(),
@@ -190,39 +320,840 @@ app.post('/api/v1/auth/login', (req, res) => {
     });
 });
 
-// Get user info endpoint
-app.get('/api/v1/auth/user', (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) {
-        return res.status(401).json({ message: 'No token provided' });
-    }
-    
+// Get all cases
+app.get('/api/v1/cases', (req, res) => {
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = users.find(u => u.id === decoded.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        
-        const { password: _, ...userResponse } = user;
-        res.json(userResponse);
+        // Return cases in the format expected by frontend
+        res.json(cases);
     } catch (error) {
-        res.status(401).json({ message: 'Invalid token' });
+        console.error('Error retrieving cases:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve cases'
+        });
     }
 });
 
-// Start server
-app.listen(PORT, () => {
+// Get case by ID
+app.get('/api/v1/cases/:caseId', (req, res) => {
+    try {
+        const { caseId } = req.params;
+        const caseData = cases.find(c => c.caseId === caseId || c.id === caseId);
+        
+        if (!caseData) {
+            return res.status(404).json({
+                success: false,
+                error: 'Case not found'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: caseData,
+            message: 'Case retrieved successfully'
+        });
+    } catch (error) {
+        console.error('Error retrieving case:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve case'
+        });
+    }
+});
+
+// Get case application data
+app.get('/api/v1/cases/:caseId/application', (req, res) => {
+    try {
+        const { caseId } = req.params;
+        const applicationData = applications[caseId];
+        
+        if (!applicationData) {
+            // Return empty application data if not found
+            return res.json({
+                caseId: caseId,
+                sections: {
+                    insured: { fields: {} },
+                    policy: { fields: {} },
+                    beneficiary: { fields: {} }
+                }
+            });
+        }
+        
+        res.json(applicationData);
+    } catch (error) {
+        console.error('Error retrieving application:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve application'
+        });
+    }
+});
+
+// Create case application
+app.post('/api/v1/cases/:caseId/application', (req, res) => {
+    try {
+        const { caseId } = req.params;
+        const { sections } = req.body;
+        
+        // Initialize application if it doesn't exist
+        if (!applications[caseId]) {
+            applications[caseId] = {
+                caseId: caseId,
+                sections: sections || {}
+            };
+        } else {
+            // Merge with existing sections
+            applications[caseId].sections = { ...applications[caseId].sections, ...sections };
+        }
+        
+        res.json({
+            success: true,
+            data: applications[caseId]
+        });
+    } catch (error) {
+        console.error('Error creating application:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to create application'
+        });
+    }
+});
+
+// Update case application section
+app.patch('/api/v1/cases/:caseId/application/:section', (req, res) => {
+    try {
+        const { caseId, section } = req.params;
+        const { fields } = req.body;
+        
+        // Initialize application if it doesn't exist
+        if (!applications[caseId]) {
+            applications[caseId] = {
+                caseId: caseId,
+                sections: {}
+            };
+        }
+        
+        // Update the section
+        applications[caseId].sections[section] = {
+            fields: { ...applications[caseId].sections[section]?.fields, ...fields }
+        };
+        
+        res.json({
+            success: true,
+            message: `${section} section updated successfully`,
+            caseId: caseId,
+            section: section
+        });
+    } catch (error) {
+        console.error('Error updating application:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update application'
+        });
+    }
+});
+
+// Create new case
+app.post('/api/v1/cases', (req, res) => {
+    try {
+        const caseData = req.body;
+        const newCase = {
+            id: String(cases.length + 1),
+            caseId: `CS-${Date.now()}`,
+            caseNumber: `APP-2024-${String(Date.now()).slice(-6)}`,
+            insuredName: caseData.insuredName || 'Unknown',
+            status: 'draft',
+            policyType: caseData.policyType || 'Term Life',
+            coverageAmount: caseData.coverageAmount || '$250,000',
+            faceAmount: caseData.faceAmount || 250000,
+            premium: caseData.premium || 75.00,
+            agent: caseData.agent || 'System',
+            zinniaCaseId: `ZC-${String(Date.now()).slice(-6)}-2024`,
+            templateId: caseData.templateId || 'template-1',
+            applicationDate: new Date().toISOString().split('T')[0],
+            createdAt: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+            priority: 'medium',
+            formData: caseData.formData || {}
+        };
+        
+        cases.push(newCase);
+        
+        res.json({
+            success: true,
+            data: newCase,
+            message: 'Case created successfully'
+        });
+    } catch (error) {
+        console.error('Error creating case:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to create case'
+        });
+    }
+});
+
+// Templates endpoint
+app.get('/api/v1/auth/templates', (req, res) => {
+    try {
+        res.json({
+            total: 1,
+            devBypass: true,
+            items: [{
+                createdAt: Date.now(),
+                isDefault: true,
+                description: "Default template for development",
+                name: "Default Term Life v0",
+                id: "tmpl-dev-term-v0"
+            }]
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch templates'
+        });
+    }
+});
+
+// Chatbot endpoints
+app.post('/api/v1/chatbot/session/start', (req, res) => {
+    try {
+        const sessionId = `chat-${Date.now()}`;
+        
+        res.json({
+            success: true,
+            data: {
+                sessionId,
+                message: 'Chatbot session started'
+            }
+        });
+    } catch (error) {
+        console.error('Error starting chatbot session:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to start chatbot session'
+        });
+    }
+});
+
+app.post('/api/v1/chatbot/session/:sessionId/message', (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const { message } = req.body;
+        
+        res.json({
+            success: true,
+            sessionId: sessionId,
+            response: `I received your message: "${message}". How can I help you further?`,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error processing chatbot message:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process message'
+        });
+    }
+});
+
+// Search endpoint
+app.post('/api/search', (req, res) => {
+    try {
+        const { q } = req.query;
+        
+        const searchResults = cases.filter(caseItem => 
+            caseItem.insuredName.toLowerCase().includes((q || '').toLowerCase()) ||
+            caseItem.caseId.toLowerCase().includes((q || '').toLowerCase()) ||
+            caseItem.caseNumber.toLowerCase().includes((q || '').toLowerCase())
+        );
+        
+        res.json({
+            success: true,
+            query: q,
+            results: searchResults,
+            totalResults: searchResults.length
+        });
+    } catch (error) {
+        console.error('Error searching:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to search'
+        });
+    }
+});
+
+// TX1 Import endpoint
+app.post('/api/v1/tx1/import', (req, res) => {
+    try {
+        const xmlContent = req.body;
+        console.log('TX1 Import - Received XML content length:', xmlContent?.length || 0);
+        
+        // Parse XML content to extract data
+        let parsedData = {
+            insuredName: 'TX1 Imported Customer',
+            policyType: 'Term Life',
+            faceAmount: 750000,
+            premium: 200.00,
+            effectiveDate: new Date().toISOString().split('T')[0],
+            agent: 'TX1 System',
+            ssn: '999-99-9999',
+            dob: '1980-01-01',
+            address: '123 TX1 Import St, TX1 City, TX1',
+            phone: '(555) TX1-0000',
+            email: 'tx1.imported@example.com'
+        };
+        
+        // Try to parse XML if it's a string
+        if (typeof xmlContent === 'string' && xmlContent.includes('<')) {
+            try {
+                // Simple XML parsing for common TX1 fields
+                const nameMatch = xmlContent.match(/<Name[^>]*>([^<]+)<\/Name>/i);
+                if (nameMatch) parsedData.insuredName = nameMatch[1];
+                
+                const policyMatch = xmlContent.match(/<PolicyType[^>]*>([^<]+)<\/PolicyType>/i);
+                if (policyMatch) parsedData.policyType = policyMatch[1];
+                
+                const amountMatch = xmlContent.match(/<FaceAmount[^>]*>([^<]+)<\/FaceAmount>/i);
+                if (amountMatch) parsedData.faceAmount = parseInt(amountMatch[1].replace(/[^0-9]/g, '')) || 750000;
+                
+                const premiumMatch = xmlContent.match(/<Premium[^>]*>([^<]+)<\/Premium>/i);
+                if (premiumMatch) parsedData.premium = parseFloat(premiumMatch[1].replace(/[^0-9.]/g, '')) || 200.00;
+                
+                const ssnMatch = xmlContent.match(/<SSN[^>]*>([^<]+)<\/SSN>/i);
+                if (ssnMatch) parsedData.ssn = ssnMatch[1];
+                
+                const dobMatch = xmlContent.match(/<DateOfBirth[^>]*>([^<]+)<\/DateOfBirth>/i);
+                if (dobMatch) parsedData.dob = dobMatch[1];
+                
+                console.log('TX1 Parsed data:', parsedData);
+            } catch (parseError) {
+                console.log('XML parsing failed, using default data:', parseError.message);
+            }
+        }
+        
+        const mockCaseId = `CS-TX1-${Date.now()}`;
+        const mockPolicyId = `POL-TX1-${Date.now()}`;
+        
+        // Add to cases
+        const newCase = {
+            id: String(cases.length + 1),
+            caseId: mockCaseId,
+            caseNumber: `TX1-${String(Date.now()).slice(-6)}`,
+            insuredName: parsedData.insuredName,
+            status: 'Under Review',
+            policyType: parsedData.policyType,
+            coverageAmount: `$${parsedData.faceAmount.toLocaleString()}`,
+            faceAmount: parsedData.faceAmount,
+            premium: parsedData.premium,
+            agent: parsedData.agent,
+            zinniaCaseId: `TX1-${String(Date.now()).slice(-6)}-2024`,
+            templateId: 'template-1',
+            applicationDate: parsedData.effectiveDate,
+            createdAt: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+            priority: 'high',
+            formData: {
+                insured_name: parsedData.insuredName,
+                insured_dob: parsedData.dob,
+                insured_ssn: parsedData.ssn
+            }
+        };
+        
+        cases.push(newCase);
+        
+        // Create application data for the imported case
+        applications[mockCaseId] = {
+            caseId: mockCaseId,
+            sections: {
+                insured: {
+                    fields: {
+                        fullName: parsedData.insuredName,
+                        dateOfBirth: parsedData.dob,
+                        ssn: parsedData.ssn,
+                        address: parsedData.address,
+                        phone: parsedData.phone,
+                        email: parsedData.email
+                    }
+                },
+                policy: {
+                    fields: {
+                        policyType: parsedData.policyType,
+                        faceAmount: parsedData.faceAmount,
+                        premium: parsedData.premium,
+                        effectiveDate: parsedData.effectiveDate
+                    }
+                },
+                agent: {
+                    fields: {
+                        agentName: parsedData.agent,
+                        agentCode: 'TX1-AGENT',
+                        agencyName: 'TX1 Agency'
+                    }
+                }
+            }
+        };
+        
+        console.log('TX1 Import successful - Case ID:', mockCaseId);
+        
+        res.json({
+            success: true,
+            caseId: mockCaseId,
+            policyId: mockPolicyId,
+            message: 'TX1 XML imported successfully',
+            importedAt: new Date().toISOString(),
+            fileName: 'imported.tx1',
+            recordCount: 1
+        });
+    } catch (error) {
+        console.error('Error importing TX1:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to import TX1 XML'
+        });
+    }
+});
+
+// ExamOne locations endpoint
+app.get('/api/v1/examone/locations', (req, res) => {
+    try {
+        const zip = (req.query.zipCode || '').toString();
+        res.json({
+            zip,
+            items: [
+                { id: 'LOC-001', name: 'Quest Diagnostics – Main', address: '123 Main St', city: 'Los Angeles', state: 'CA', zip: '90210' },
+                { id: 'LOC-002', name: 'LabCorp – Beverly', address: '200 Beverly Dr', city: 'Beverly Hills', state: 'CA', zip: '90210' },
+            ]
+        });
+    } catch (error) {
+        console.error('Error retrieving locations:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve locations'
+        });
+    }
+});
+
+// ExamOne endpoints
+app.post('/api/v1/examone/lab-request', (req, res) => {
+    try {
+        const { caseId, caseNumber, zinniaCaseId, policyNumber, insuredFirstName, insuredLastName, insuredDateOfBirth, insuredAge, insuredGender, insuredSsn, insuredEmail, insuredPhone, insuredAddress, insuredCity, insuredState, insuredZip, labType, urgency, specialInstructions, physicianName, physicianPhone, physicianEmail } = req.body;
+        
+        const orderId = `EX-${Date.now()}`;
+        
+        // Create lab request record
+        const labRequest = {
+            orderId: orderId,
+            caseId: caseId,
+            caseNumber: caseNumber,
+            zinniaCaseId: zinniaCaseId,
+            policyNumber: policyNumber,
+            insuredFirstName: insuredFirstName,
+            insuredLastName: insuredLastName,
+            insuredDateOfBirth: insuredDateOfBirth,
+            insuredAge: insuredAge,
+            insuredGender: insuredGender,
+            insuredSsn: insuredSsn,
+            insuredEmail: insuredEmail,
+            insuredPhone: insuredPhone,
+            insuredAddress: insuredAddress,
+            insuredCity: insuredCity,
+            insuredState: insuredState,
+            insuredZip: insuredZip,
+            labType: labType,
+            urgency: urgency,
+            specialInstructions: specialInstructions,
+            physicianName: physicianName,
+            physicianPhone: physicianPhone,
+            physicianEmail: physicianEmail,
+            status: 'PENDING',
+            submittedAt: new Date().toISOString(),
+            estimatedCompletion: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+            labLocation: 'ExamOne Lab Center'
+        };
+        
+        // Store lab request in applications database
+        if (!applications[caseId]) {
+            applications[caseId] = { caseId: caseId, sections: {} };
+        }
+        
+        if (!applications[caseId].sections.labRequests) {
+            applications[caseId].sections.labRequests = { fields: {} };
+        }
+        
+        applications[caseId].sections.labRequests.fields[orderId] = labRequest;
+        
+        console.log('Lab request submitted for case:', caseId, 'Order ID:', orderId);
+        
+        res.status(202).json({
+            success: true,
+            requestId: orderId,
+            message: 'Lab request submitted successfully',
+            estimatedCompletion: labRequest.estimatedCompletion,
+            labLocation: labRequest.labLocation
+        });
+    } catch (error) {
+        console.error('Error requesting lab:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to request lab'
+        });
+    }
+});
+
+app.get('/api/v1/examone/results', (req, res) => {
+    try {
+        const { caseId } = req.query;
+        
+        // Check if we have lab requests for this case
+        let labResults = [];
+        if (applications[caseId] && applications[caseId].sections.labRequests) {
+            const labRequests = applications[caseId].sections.labRequests.fields;
+            
+            // Generate mock results for each lab request
+            Object.values(labRequests).forEach((request, index) => {
+                labResults.push({
+                    testName: request.labType || 'Comprehensive Blood Panel',
+                    status: 'COMPLETED',
+                    collectedAt: new Date(Date.now() - (index + 1) * 86400000).toISOString(),
+                    completedAt: new Date().toISOString(),
+                    highlights: [
+                        'Cholesterol: 180 mg/dL (Normal)',
+                        'Glucose: 95 mg/dL (Normal)',
+                        'Blood Pressure: 120/80 (Normal)',
+                        'BMI: 24.2 (Normal)',
+                        'Liver Function: Normal',
+                        'Kidney Function: Normal'
+                    ],
+                    notes: 'All values within normal range. No medical concerns detected. Patient is in good health.',
+                    physician: request.physicianName || 'Dr. Smith',
+                    labLocation: request.labLocation || 'ExamOne Lab Center',
+                    orderId: request.orderId
+                });
+            });
+        }
+        
+        // If no lab requests found, return default results
+        if (labResults.length === 0) {
+            labResults = [
+                {
+                    testName: 'Comprehensive Blood Panel',
+                    status: 'COMPLETED',
+                    collectedAt: new Date(Date.now() - 86400000).toISOString(),
+                    completedAt: new Date().toISOString(),
+                    highlights: [
+                        'Cholesterol: 180 mg/dL (Normal)',
+                        'Glucose: 95 mg/dL (Normal)',
+                        'Blood Pressure: 120/80 (Normal)',
+                        'BMI: 24.2 (Normal)'
+                    ],
+                    notes: 'All values within normal range. No medical concerns detected.',
+                    physician: 'Dr. Smith',
+                    labLocation: 'ExamOne Lab Center'
+                }
+            ];
+        }
+        
+        // Store results in applications database
+        if (applications[caseId]) {
+            if (!applications[caseId].sections.labResults) {
+                applications[caseId].sections.labResults = { fields: {} };
+            }
+            applications[caseId].sections.labResults.fields = {
+                results: labResults,
+                lastUpdated: new Date().toISOString()
+            };
+        }
+        
+        console.log('Lab results retrieved for case:', caseId, 'Results count:', labResults.length);
+        
+        res.json({
+            success: true,
+            caseId: caseId,
+            results: labResults,
+            lastUpdated: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error retrieving results:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve results'
+        });
+    }
+});
+
+// ExamOne Lab PiQ Order endpoint - Real API Integration
+app.post('/api/v1/vendor/examone/labpiq/order', async (req, res) => {
+    try {
+        const { caseId, insuredInfo, policyInfo } = req.body;
+        
+        if (!caseId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Case ID is required'
+            });
+        }
+        
+        console.log('Lab PiQ Order Request:', { caseId, insuredInfo, policyInfo });
+        
+        // Real ExamOne API call
+        const examOneUrl = 'https://qcs-uat.questdiagnostics.com/services/eoservice.asmx';
+        
+        // Create ACORD XML request
+        const orderId = `ACORD-${Date.now()}`;
+        const acordXml = `<?xml version="1.0" encoding="UTF-8"?>
+<ACORD>
+  <InsuranceSvcRq>
+    <RqUID>${orderId}</RqUID>
+    <TransactionRequestDt>${new Date().toISOString()}</TransactionRequestDt>
+    <MsgRqHdr>
+      <OrgRef>
+        <OrgId>SecureInsure</OrgId>
+      </OrgRef>
+    </MsgRqHdr>
+    <InsuranceSvcRq>
+      <LifeRq>
+        <InsuredOrPrincipal>
+          <PersonName>
+            <GivenName>${insuredInfo?.name?.split(' ')[0] || 'John'}</GivenName>
+            <Surname>${insuredInfo?.name?.split(' ')[1] || 'Doe'}</Surname>
+          </PersonName>
+          <SSN>${insuredInfo?.ssn || '000-00-0000'}</SSN>
+        </InsuredOrPrincipal>
+        <Policy>
+          <PolicyNumber>${policyInfo?.number || 'POL-001'}</PolicyNumber>
+          <FaceAmount>${policyInfo?.amount || 500000}</FaceAmount>
+        </Policy>
+        <LabPiQRequest>
+          <CaseId>${caseId}</CaseId>
+          <RequestType>NEW</RequestType>
+        </LabPiQRequest>
+      </LifeRq>
+    </InsuranceSvcRq>
+  </InsuranceSvcRq>
+</ACORD>`;
+
+        try {
+            // Make real API call to ExamOne with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
+            const response = await fetch(examOneUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/xml; charset=utf-8',
+                    'SOAPAction': 'http://tempuri.org/ProcessLabPiQ',
+                    'User-Agent': 'SecureInsure-Pro/1.0'
+                },
+                body: `<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <ProcessLabPiQ xmlns="http://tempuri.org/">
+      <xmlRequest>${acordXml}</xmlRequest>
+    </ProcessLabPiQ>
+  </soap:Body>
+</soap:Envelope>`,
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`ExamOne API error: ${response.status} ${response.statusText}`);
+            }
+
+            const responseText = await response.text();
+            console.log('ExamOne API Response:', responseText);
+
+            const order = {
+                orderId,
+                caseId,
+                status: 'submitted',
+                submittedAt: new Date().toISOString(),
+                insuredInfo: insuredInfo || {},
+                policyInfo: policyInfo || {},
+                acordXml: acordXml,
+                examOneResponse: responseText,
+                apiStatus: 'success'
+            };
+            
+            res.json({
+                success: true,
+                data: order
+            });
+            
+        } catch (apiError) {
+            console.error('ExamOne API Error:', apiError.message);
+            
+            // Always fallback to mock response for now
+            const order = {
+                orderId,
+                caseId,
+                status: 'submitted',
+                submittedAt: new Date().toISOString(),
+                insuredInfo: insuredInfo || {},
+                policyInfo: policyInfo || {},
+                acordXml: acordXml,
+                apiStatus: 'mock',
+                error: `Real API failed: ${apiError.message}`
+            };
+            
+            res.json({
+                success: true,
+                data: order
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error creating Lab PiQ order:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create Lab PiQ order'
+        });
+    }
+});
+
+// ExamOne Lab PiQ Results endpoint
+app.get('/api/v1/vendor/examone/labpiq/results', (req, res) => {
+    try {
+        const { caseId } = req.query;
+        
+        if (!caseId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Case ID is required'
+            });
+        }
+        
+        // Mock results response
+        const results = {
+            caseId,
+            orderId: `ACORD-${Date.now()}`,
+            status: 'completed',
+            completedAt: new Date().toISOString(),
+            summary: {
+                overallScore: 85,
+                riskLevel: 'Low',
+                recommendations: ['Continue current coverage', 'Annual review recommended']
+            },
+            observations: [
+                {
+                    category: 'Medical History',
+                    score: 90,
+                    details: 'Clean medical history with no significant findings'
+                },
+                {
+                    category: 'Lifestyle Factors',
+                    score: 80,
+                    details: 'Non-smoker, regular exercise routine'
+                }
+            ],
+            scores: {
+                medical: 90,
+                lifestyle: 80,
+                financial: 85,
+                overall: 85
+            },
+            flags: [],
+            rawData: {
+                xmlResponse: '<?xml version="1.0" encoding="UTF-8"?><ACORD>...</ACORD>',
+                jsonData: {
+                    orderId: `ACORD-${Date.now()}`,
+                    status: 'HIT',
+                    results: 'Available'
+                }
+            }
+        };
+        
+        res.json({
+            success: true,
+            results: [results]
+        });
+    } catch (error) {
+        console.error('Error fetching Lab PiQ results:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch Lab PiQ results'
+        });
+    }
+});
+
+// Create HTTP server for WebSocket support
+const server = http.createServer(app);
+
+// WebSocket server for voice agent
+const wss = new WebSocket.Server({ 
+    server,
+    path: '/ws'
+});
+
+wss.on('connection', (ws, req) => {
+    const origin = req.headers.origin;
+    
+    console.log('WebSocket client connected from:', origin);
+    
+    // Send hello message on connect
+    ws.send(JSON.stringify({ type: 'hello', ok: true }));
+    
+    // Set up heartbeat
+    const heartbeat = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping', ts: new Date().toISOString() }));
+        }
+    }, 10000);
+    
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message);
+            console.log('WebSocket message received:', data.type);
+            
+            // Echo back for testing
+            ws.send(JSON.stringify({
+                type: 'echo',
+                timestamp: new Date().toISOString(),
+                data: data
+            }));
+        } catch (error) {
+            console.error('WebSocket message parse error:', error);
+        }
+    });
+    
+    ws.on('close', () => {
+        console.log('WebSocket client disconnected from:', origin);
+        clearInterval(heartbeat);
+    });
+    
+    ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        clearInterval(heartbeat);
+    });
+});
+
+server.listen(PORT, () => {
     console.log(`🚀 Mock Auth Server running on http://localhost:${PORT}`);
-    console.log('📝 Available endpoints:');
-    console.log(`   GET  /actuator/health - Health check`);
-    console.log(`   POST /api/v1/auth/register - Register user`);
+    console.log(`🔌 WebSocket server available at ws://localhost:${PORT}/ws`);
+    console.log('✅ Available endpoints:');
+    console.log(`   GET  /health - Health check`);
+    console.log(`   GET  /ready - Readiness check`);
+    console.log(`   GET  /version - Version info`);
     console.log(`   POST /api/v1/auth/login - Login user`);
-    console.log(`   GET  /api/v1/auth/user - Get user info`);
-    console.log('\n👤 Pre-loaded users:');
-    console.log('   Username: admin_test, Password: Test@1234 (ADMIN)');
-    console.log('   Username: underwriter1, Password: SecurePass123! (UNDERWRITER)');
-    console.log('   Username: customer1, Password: CustomerPass123! (CUSTOMER)');
+    console.log(`   GET  /api/v1/cases - List all cases`);
+    console.log(`   GET  /api/v1/cases/:caseId - Get case by ID`);
+    console.log(`   GET  /api/v1/cases/:caseId/application - Get case application`);
+    console.log(`   PATCH /api/v1/cases/:caseId/application/:section - Update section`);
+    console.log(`   POST /api/v1/cases - Create new case`);
+    console.log(`   GET  /api/v1/auth/templates - List templates`);
+    console.log(`   POST /api/v1/chatbot/session/start - Start chatbot session`);
+    console.log(`   POST /api/v1/chatbot/session/:id/message - Send message`);
+    console.log(`   POST /api/search - Search cases`);
+    console.log(`   POST /api/v1/tx1/import - Import TX1 XML`);
+    console.log(`   POST /api/v1/examone/lab-request - ExamOne lab request`);
+    console.log(`   GET  /api/v1/examone/results - ExamOne results`);
+    console.log(`   POST /api/v1/vendor/examone/labpiq/order - Lab PiQ order`);
+    console.log(`   GET  /api/v1/vendor/examone/labpiq/results - Lab PiQ results`);
+    console.log('\n👥 Pre-loaded users:');
+    console.log('   Username: admin, Password: admin123 (ADMIN)');
+    console.log('\n🌐 CORS enabled for:');
+    console.log(`   ${allowedOrigins.join(', ')}`);
 });
 
 module.exports = app;

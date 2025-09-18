@@ -195,4 +195,8 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
     
     @Query("SELECT c FROM Claim c WHERE c.fraudScore > :threshold AND c.status IN ('SUBMITTED', 'UNDER_REVIEW') ORDER BY c.fraudScore DESC")
     List<Claim> findPendingHighRiskFraudClaims(@Param("threshold") Double threshold);
+    
+    // Missing methods needed by service implementation
+    long countByCustomerId(Long customerId);
+    long countByCustomerIdAndIncidentDateAfter(Long customerId, LocalDate date);
 } 

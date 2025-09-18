@@ -3,6 +3,7 @@ package com.secureinsure.claims.entity;
 public enum PriorityLevel {
     LOW("Low"),
     NORMAL("Normal"),
+    MEDIUM("Medium"),
     HIGH("High"),
     URGENT("Urgent"),
     CRITICAL("Critical");
@@ -27,6 +28,10 @@ public enum PriorityLevel {
     
     public boolean isNormalPriority() {
         return this == NORMAL;
+    }
+    
+    public boolean isMediumPriority() {
+        return this == MEDIUM;
     }
     
     public boolean isUrgent() {

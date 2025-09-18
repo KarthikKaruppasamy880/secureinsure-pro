@@ -103,7 +103,7 @@ describe('ErrorBoundary', () => {
   it('shows error details in development mode', () => {
     // Mock NODE_ENV to be development
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    (process.env as any).NODE_ENV = 'development';
 
     render(
       <ErrorBoundary>
@@ -115,13 +115,13 @@ describe('ErrorBoundary', () => {
     expect(detailsElement).toBeInTheDocument();
 
     // Restore original env
-    process.env.NODE_ENV = originalEnv;
+    (process.env as any).NODE_ENV = originalEnv;
   });
 
   it('hides error details in production mode', () => {
     // Mock NODE_ENV to be production
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    (process.env as any).NODE_ENV = 'production';
 
     render(
       <ErrorBoundary>
@@ -133,7 +133,7 @@ describe('ErrorBoundary', () => {
     expect(detailsElement).not.toBeInTheDocument();
 
     // Restore original env
-    process.env.NODE_ENV = originalEnv;
+    (process.env as any).NODE_ENV = originalEnv;
   });
 
   it('stores errors in localStorage', () => {

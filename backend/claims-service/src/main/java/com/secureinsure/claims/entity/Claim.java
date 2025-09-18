@@ -191,6 +191,49 @@ public class Claim {
     @Column(name = "external_notes", columnDefinition = "TEXT")
     private String externalNotes;
     
+    // Missing fields needed by service implementation
+    @Column(name = "estimated_amount", precision = 15, scale = 2)
+    private BigDecimal estimatedAmount;
+    
+    @Column(name = "deductible", precision = 15, scale = 2)
+    private BigDecimal deductible;
+    
+    @Column(name = "co_pay", precision = 15, scale = 2)
+    private BigDecimal coPay;
+    
+    @Column(name = "agent_id")
+    private Long agentId;
+    
+    @Column(name = "adjuster_id")
+    private Long adjusterId;
+    
+    @Column(name = "underwriter_id")
+    private Long underwriterId;
+    
+    @Column(name = "rejection_notes", columnDefinition = "TEXT")
+    private String rejectionNotes;
+    
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+    
+    @Column(name = "rejected_at")
+    private LocalDateTime rejectedAt;
+    
+    @Column(name = "rejected_by")
+    private Long rejectedBy;
+    
+    @Column(name = "closed_at")
+    private LocalDateTime closedAt;
+    
+    @Column(name = "closed_by")
+    private Long closedBy;
+    
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
+    
+    @Column(name = "archived_by")
+    private Long archivedBy;
+    
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;

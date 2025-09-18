@@ -167,13 +167,15 @@ class NotificationServiceImplTest {
 
     @Test
     void getNotificationsByUserId_Success() {
-        when(notificationRepository.findByUserId(1L)).thenReturn(List.of(testNotification));
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Notification> notificationPage = new PageImpl<>(List.of(testNotification), pageable, 1);
+        when(notificationRepository.findByUserId(1L, pageable)).thenReturn(notificationPage);
 
-        List<NotificationDto> result = notificationService.getNotificationsByUserId(1L);
+        Page<NotificationDto> result = notificationService.getNotificationsByUserId(1L, pageable);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
-        verify(notificationRepository).findByUserId(1L);
+        assertEquals(1, result.getTotalElements());
+        verify(notificationRepository).findByUserId(1L, pageable);
     }
 
     @Test
@@ -287,7 +289,7 @@ class NotificationServiceImplTest {
         when(notificationRepository.findById(1L)).thenReturn(Optional.of(testNotification));
         when(notificationRepository.save(any(Notification.class))).thenReturn(testNotification);
 
-        notificationService.retryNotification(1L);
+        notificationService.retryFailedNotification(1L);
 
         verify(notificationRepository).findById(1L);
         verify(notificationRepository).save(any(Notification.class));
@@ -298,7 +300,7 @@ class NotificationServiceImplTest {
         testNotification.setStatus(NotificationStatus.PENDING);
         when(notificationRepository.findById(1L)).thenReturn(Optional.of(testNotification));
 
-        assertThrows(RuntimeException.class, () -> notificationService.retryNotification(1L));
+        assertThrows(RuntimeException.class, () -> notificationService.retryFailedNotification(1L));
         verify(notificationRepository).findById(1L);
         verify(notificationRepository, never()).save(any());
     }
@@ -310,7 +312,7 @@ class NotificationServiceImplTest {
         testNotification.setMaxRetries(3);
         when(notificationRepository.findById(1L)).thenReturn(Optional.of(testNotification));
 
-        assertThrows(RuntimeException.class, () -> notificationService.retryNotification(1L));
+        assertThrows(RuntimeException.class, () -> notificationService.retryFailedNotification(1L));
         verify(notificationRepository).findById(1L);
         verify(notificationRepository, never()).save(any());
     }

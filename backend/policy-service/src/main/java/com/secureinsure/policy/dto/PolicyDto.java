@@ -141,4 +141,10 @@ public class PolicyDto {
     
     @Schema(description = "Outstanding premium amount", example = "300.00")
     private BigDecimal outstandingPremium;
+    
+    @Schema(description = "Days until policy expiry", example = "30")
+    private Long daysUntilExpiry;
+    
+    @Schema(description = "Whether policy is expiring soon", example = "true")
+    private Boolean isExpiringSoon;
 } 

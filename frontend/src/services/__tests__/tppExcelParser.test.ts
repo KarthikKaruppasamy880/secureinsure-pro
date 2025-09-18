@@ -21,7 +21,7 @@ describe('TPPExcelParser', () => {
     jest.resetAllMocks();
   });
 
-  describe('parseTPPExcelFile', () => {
+  describe('parseExcelFile', () => {
     it('should parse Excel file and return configuration', async () => {
       // Mock fetch response
       const mockArrayBuffer = new ArrayBuffer(8);
@@ -44,7 +44,7 @@ describe('TPPExcelParser', () => {
         ['Product Type', 'select', 'Yes']
       ]);
 
-      const result = await parser.parseTPPExcelFile();
+      const result = await parser.parseExcelFile('path/to/file.xlsx');
 
       expect(result).toHaveProperty('sheets');
       expect(result).toHaveProperty('version', '1.0.0');
@@ -57,7 +57,7 @@ describe('TPPExcelParser', () => {
         ok: false
       });
 
-      const result = await parser.parseTPPExcelFile();
+      const result = await parser.parseExcelFile('path/to/file.xlsx');
 
       expect(result).toHaveProperty('sheets');
       expect(Object.keys(result.sheets)).toHaveLength(9); // Should return default configuration
@@ -66,7 +66,7 @@ describe('TPPExcelParser', () => {
     it('should handle network errors gracefully', async () => {
       (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await parser.parseTPPExcelFile();
+      const result = await parser.parseExcelFile('path/to/file.xlsx');
 
       expect(result).toHaveProperty('sheets');
       expect(result.sourceFile).toBe('Default Configuration');
@@ -89,33 +89,33 @@ describe('TPPExcelParser', () => {
     });
 
     it('should determine correct field types', () => {
-      expect(parser['determineFieldType']('Email Address')).toBe('email');
-      expect(parser['determineFieldType']('Phone Number')).toBe('tel');
-      expect(parser['determineFieldType']('Date of Birth')).toBe('date');
-      expect(parser['determineFieldType']('Premium Amount')).toBe('number');
-      expect(parser['determineFieldType']('Gender')).toBe('select');
-      expect(parser['determineFieldType']('Comments')).toBe('textarea');
-      expect(parser['determineFieldType']('Agree to Terms')).toBe('checkbox');
+      expect(parser.determineFieldType('Email Address', 'Personal')).toBe('email');
+      expect(parser.determineFieldType('Phone Number', 'Personal')).toBe('tel');
+      expect(parser.determineFieldType('Date of Birth', 'Personal')).toBe('date');
+      expect(parser.determineFieldType('Premium Amount', 'Personal')).toBe('number');
+      expect(parser.determineFieldType('Gender', 'Personal')).toBe('select');
+      expect(parser.determineFieldType('Comments', 'Personal')).toBe('textarea');
+      expect(parser.determineFieldType('Agree to Terms', 'Personal')).toBe('checkbox');
     });
 
     it('should determine mandatory fields correctly', () => {
-      expect(parser['determineMandatory']('First Name', [])).toBe(true);
-      expect(parser['determineMandatory']('Last Name', [])).toBe(true);
-      expect(parser['determineMandatory']('Date of Birth', [])).toBe(true);
-      expect(parser['determineMandatory']('SSN', [])).toBe(true);
-      expect(parser['determineMandatory']('Comments', [])).toBe(false);
+      expect(parser.isRequiredField('First Name')).toBe(true);
+      expect(parser.isRequiredField('Last Name')).toBe(true);
+      expect(parser.isRequiredField('Date of Birth')).toBe(true);
+      expect(parser.isRequiredField('SSN')).toBe(true);
+      expect(parser.isRequiredField('Comments')).toBe(false);
     });
 
     it('should generate proper validations', () => {
-      const emailValidations = parser['determineValidations']('email', 'Email Address', true);
+      const emailValidations = parser.extractValidation('email', 'Email Address');
       expect(emailValidations).toContain('required');
       expect(emailValidations).toContain('email_format');
 
-      const phoneValidations = parser['determineValidations']('tel', 'Phone Number', true);
+      const phoneValidations = parser.extractValidation('tel', 'Phone Number');
       expect(phoneValidations).toContain('required');
       expect(phoneValidations).toContain('phone_format');
 
-      const numberValidations = parser['determineValidations']('number', 'Premium Amount', true);
+      const numberValidations = parser.extractValidation('number', 'Premium Amount');
       expect(numberValidations).toContain('required');
       expect(numberValidations).toContain('numeric');
       expect(numberValidations).toContain('min:0');

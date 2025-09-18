@@ -1,0 +1,25 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "SecureInsure Pro Backend Mock Server",
+  "main": "../mock-auth-server.js",
+  "scripts": {
+    "start": "node ../mock-auth-server.js",
+    "dev": "ts-node src/server.ts",
+    "new": "ts-node index.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-fileupload": "^1.5.2",
+    "fast-xml-parser": "^5.2.5",
+    "jsonwebtoken": "^9.0.2",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}

@@ -7,6 +7,10 @@ export const Deeplinks = {
     path: "/application/:caseId/insured",
     anchor: "Email Address"
   },
+  "insured.emailaddress": {
+    path: "/application/:caseId/insured",
+    anchor: "Email Address"
+  },
   "insured.mobile": {
     path: "/application/:caseId/insured",
     anchor: "Mobile Phone"
@@ -57,7 +61,7 @@ export interface DeeplinkConfig {
 export function navigateToDeeplink(caseId: string, key: string): void {
   const deeplink = Deeplinks[key as keyof typeof Deeplinks];
   if (!deeplink) {
-    console.warn(`Unknown deeplink key: ${key}`);
+    console.warn(`Unknown deeplink key: ${key} - available keys:`, Object.keys(Deeplinks));
     return;
   }
 

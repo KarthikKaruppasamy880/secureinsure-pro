@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TXLife>
+  <TXLifeRequest>
+    <OLifE>
+      <Holding>
+        <Policy>
+          <PolNumber>POL-12345</PolNumber>
+          <ProductCode>TERM</ProductCode>
+          <FaceAmt>100000</FaceAmt>
+        </Policy>
+      </Holding>
+      <Party>
+        <Person>
+          <FullName>John Doe</FullName>
+          <FirstName>John</FirstName>
+          <LastName>Doe</LastName>
+          <BirthDate>1980-01-01</BirthDate>
+        </Person>
+      </Party>
+    </OLifE>
+  </TXLifeRequest>
+</TXLife>

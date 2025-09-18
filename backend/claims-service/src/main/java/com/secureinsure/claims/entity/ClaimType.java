@@ -1,11 +1,13 @@
 package com.secureinsure.claims.entity;
 
 public enum ClaimType {
+    AUTO("Auto"),
     AUTO_COLLISION("Auto Collision"),
     AUTO_THEFT("Auto Theft"),
     AUTO_VANDALISM("Auto Vandalism"),
     AUTO_GLASS("Auto Glass"),
     AUTO_MECHANICAL("Auto Mechanical"),
+    HOME("Home"),
     HOME_FIRE("Home Fire"),
     HOME_THEFT("Home Theft"),
     HOME_WATER_DAMAGE("Home Water Damage"),
@@ -14,10 +16,12 @@ public enum ClaimType {
     LIFE_DEATH("Life Death"),
     LIFE_DISABILITY("Life Disability"),
     LIFE_CRITICAL_ILLNESS("Life Critical Illness"),
+    HEALTH("Health"),
     HEALTH_MEDICAL("Health Medical"),
     HEALTH_DENTAL("Health Dental"),
     HEALTH_VISION("Health Vision"),
     HEALTH_PRESCRIPTION("Health Prescription"),
+    LIABILITY("Liability"),
     BUSINESS_PROPERTY("Business Property"),
     BUSINESS_LIABILITY("Business Liability"),
     BUSINESS_INTERRUPTION("Business Interruption"),

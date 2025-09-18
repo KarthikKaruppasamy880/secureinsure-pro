@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Transaction>
+  <Header>
+    <TransactionType>Application</TransactionType>
+    <TransactionDate>2024-01-15</TransactionDate>
+    <TransactionId>TX1-2024-001</TransactionId>
+  </Header>
+  <Application>
+    <Insured>
+      <Name>John Smith</Name>
+      <DateOfBirth>1985-03-15</DateOfBirth>
+      <SSN>123-45-6789</SSN>
+      <Address>123 Main Street, Anytown, USA 12345</Address>
+      <Phone>(555) 123-4567</Phone>
+      <Email>john.smith@email.com</Email>
+    </Insured>
+    <Policy>
+      <PolicyType>Term Life</PolicyType>
+      <FaceAmount>750000</FaceAmount>
+      <Premium>225.00</Premium>
+      <EffectiveDate>2024-02-01</EffectiveDate>
+      <Term>20</Term>
+    </Policy>
+    <Agent>
+      <Name>Sarah Johnson</Name>
+      <Code>AG-001</Code>
+      <Agency>SecureInsure Agency</Agency>
+    </Agent>
+    <Beneficiary>
+      <Primary>Jane Smith (Spouse)</Primary>
+      <Relationship>Spouse</Relationship>
+      <Percentage>100</Percentage>
+    </Beneficiary>
+  </Application>
+</Transaction>
