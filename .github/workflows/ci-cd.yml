@@ -127,12 +127,15 @@ jobs:
           cd backend
           mvn test -Dspring.profiles.active=test
 
-      - name: Upload surefire reports
+      - name: Upload surefire reports (all backend modules)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: surefire-reports-policy-service
-          path: backend/policy-service/target/surefire-reports/
+          name: surefire-reports
+          path: |
+            backend/**/target/surefire-reports/*.txt
+            backend/**/target/surefire-reports/*.xml
+            backend/**/target/*.dumpstream
 
       - name: Run backend integration tests
         run: |
